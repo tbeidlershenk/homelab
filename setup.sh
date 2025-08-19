@@ -18,19 +18,16 @@ sudo apt install -y curl git docker.io docker-compose
 echo "Enabling Docker service..."
 sudo systemctl enable --now docker
 
-git clone https://github.com/tbeidlershenk/homelab.git $BASE_DIR
-cd $BASE_DIR
-
-read -p "Do you want to restore volumes from backup before deploying this stack? [y/N]: " restore
-  if [[ "$restore" =~ ^[Yy]$ ]]; then
-    read -p "Enter backup folder path (e.g., $BACKUP_DRIVE/docker_volumes_backup_YYYYMMDD_HHMMSS): " backup_folder
-    if [ -d "$backup_folder" ]; then
-      echo "Restoring volumes from $backup_folder..."
-      sudo rsync -a --delete "$backup_folder/" /var/lib/docker/volumes/
-    else
-      echo "Backup folder not found, skipping restore."
-    fi
+read -p "Do you want to restore volumes from backup before deploying stacks? [y/N]: " restore
+if [[ "$restore" =~ ^[Yy]$ ]]; then
+  read -p "Enter backup folder path (e.g., $BACKUP_DRIVE/backup_YYYYMMDD_HHMMSS): " backup_folder
+  if [ -d "$backup_folder" ]; then
+    echo "Restoring volumes from $backup_folder..."
+    sudo rsync -a --delete "$backup_folder/" /var/lib/docker/volumes/
+  else
+    echo "Backup folder not found, skipping restore."
   fi
+fi
 
 echo "Starting Docker stacks..."
 for d in "$BASE_DIR"/services; do
