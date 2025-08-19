@@ -20,7 +20,7 @@ sudo systemctl enable --now docker
 
 read -p "Do you want to restore volumes from backup before deploying stacks? [y/N]: " restore
 if [[ "$restore" =~ ^[Yy]$ ]]; then
-  read -p "Enter backup folder path (e.g., $BACKUP_DRIVE/backup_YYYYMMDD_HHMMSS): " backup_folder
+  read -p "Enter backup folder path: " backup_folder
   if [ -d "$backup_folder" ]; then
     echo "Restoring volumes from $backup_folder..."
     sudo rsync -a --delete "$backup_folder/" /var/lib/docker/volumes/
@@ -30,9 +30,9 @@ if [[ "$restore" =~ ^[Yy]$ ]]; then
 fi
 
 echo "Starting Docker stacks..."
-for d in "$BASE_DIR"/services; do
+for d in "$BASE_DIR/services"; do
   echo "Deploying stack in $d"
-  (cd "$d" && docker-compose up -d)
+  (docker-compose --env-file $ENV_FILE -f $d up -d)
 done
 
 echo "All stacks deployed!"
