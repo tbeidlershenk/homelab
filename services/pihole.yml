@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+    pihole:
+        image: pihole/pihole:latest
+        container_name: pihole
+        restart: unless-stopped
+        network_mode: "host"
+        environment:
+            TZ: "${PIHOLE_TZ}"
+            WEBPASSWORD: "${PIHOLE_WEBPASSWORD}"
+        volumes:
+            - pihole_data:/etc/pihole
+            - dnsmasq_data:/etc/dnsmasq.d
+
+volumes:
+    pihole_data:
+    dnsmasq_data:

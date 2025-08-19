@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+    tailscale:
+        image: tailscale/tailscale:latest
+        container_name: tailscale
+        restart: unless-stopped
+        network_mode: "host"
+        privileged: true
+        cap_add:
+            - NET_ADMIN
+            - NET_RAW
+        environment:
+            TS_AUTHKEY: "${TS_AUTHKEY}"
+            TS_DNS: "${TS_DNS}"
+        volumes:
+            - tailscale:/var/lib/tailscale
+            - /dev/net/tun:/dev/net/tun
+
+volumes:
+    tailscale:

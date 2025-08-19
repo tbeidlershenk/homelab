@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+    immich-db:
+        image: postgres:15
+        container_name: immich_db
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: "${IMMICH_DB_USER}"
+            POSTGRES_PASSWORD: "${IMMICH_DB_PASSWORD}"
+            POSTGRES_DB: "${IMMICH_DB_NAME}"
+        volumes:
+            - immich_db:/var/lib/postgresql/data
+
+    immich-app:
+        image: ghcr.io/immich-app/immich:latest
+        container_name: immich
+        restart: unless-stopped
+        ports:
+            - "2283:2283" # web interface
+            - "2284:2284" # API
+        environment:
+            DATABASE_HOST: immich-db
+            DATABASE_PORT: 5432
+            DATABASE_NAME: "${IMMICH_DB_NAME}"
+            DATABASE_USERNAME: "${IMMICH_DB_USER}"
+            DATABASE_PASSWORD: "${IMMICH_DB_PASSWORD}"
+        volumes:
+            - immich_data:/app/data
+        depends_on:
+            - immich-db
+
+volumes:
+    immich_db:
+    immich_data:
