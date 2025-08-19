@@ -30,10 +30,7 @@ if [[ "$restore" =~ ^[Yy]$ ]]; then
 fi
 
 echo "Starting Docker stacks..."
-for d in "$BASE_DIR/services"; do
-  echo "Deploying stack in $d"
-  (docker-compose --env-file $ENV_FILE -f $d up -d)
-done
+bash "$BASE_DIR/start-services.sh"
 
 echo "All stacks deployed!"
 echo "Access Portainer at: http://localhost:9000"
