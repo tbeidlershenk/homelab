@@ -7,7 +7,6 @@ ENV_FILE="$BASE_DIR/.env"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "ERROR: .env file not found at $ENV_FILE"
-  echo "Please create a .env file in $BASE_DIR"
   exit 1
 fi
 

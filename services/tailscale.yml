@@ -16,6 +16,8 @@ services:
     volumes:
       - tailscale_state:/var/lib/tailscale
       - /dev/net/tun:/dev/net/tun
+    healthcheck:
+      disable: false
 
 volumes:
   tailscale_state:

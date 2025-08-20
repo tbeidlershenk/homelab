@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -e
+set -a
+source "$HOME/homelab/.env"
+set +a
 
 BACKUP_DRIVE="/mnt/backup"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -15,10 +18,21 @@ bash "$HOME/homelab/stop-services.sh"
 
 echo "Backing up Docker volumes to $BACKUP_DIR..."
 sudo mkdir -p "$BACKUP_DIR"
-sudo tar -czvf backup/homelab_backup.tar.gz -C /var/lib/docker/volumes . 
 
-# Extract:
-# sudo tar -xzvf ~/backup/homelab_backup.tar.gz -C /var/lib/docker/volumes
+# Rsync additional backup paths from .env variables
+for backup_var in BACKUP_1 BACKUP_2 BACKUP_3; do
+  src="${!backup_var}"
+  if [ -n "$src" ] && [ -d "$src" ]; then
+    echo "Backing up $src to $BACKUP_DIR/$(basename "$src")..."
+    sudo rsync -av "$src/" "$BACKUP_DIR/$(basename "$src")/"
+  elif [[ "$src" == *:* ]]; then
+    echo "Backing up remote location $src to $BACKUP_DIR/$(basename "$src")..."
+    sudo rsync -av "$src/" "$BACKUP_DIR/$(basename "$src")/"
+  fi
+  else
+    echo "WARNING: $backup_var is not set or $src does not exist."
+  fi
+done
 
 # sudo rsync -a --delete /var/lib/docker/volumes/ "$BACKUP_DIR/"
 
