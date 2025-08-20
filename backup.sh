@@ -15,7 +15,12 @@ bash "$HOME/homelab/stop-services.sh"
 
 echo "Backing up Docker volumes to $BACKUP_DIR..."
 sudo mkdir -p "$BACKUP_DIR"
-sudo rsync -a --delete /var/lib/docker/volumes/ "$BACKUP_DIR/"
+sudo tar -czvf backup/homelab_backup.tar.gz -C /var/lib/docker/volumes . 
+
+# Extract:
+# sudo tar -xzvf ~/backup/homelab_backup.tar.gz -C /var/lib/docker/volumes
+
+# sudo rsync -a --delete /var/lib/docker/volumes/ "$BACKUP_DIR/"
 
 echo "Restarting stacks..."
 bash "$HOME/homelab/start-services.sh"
