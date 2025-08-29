@@ -19,15 +19,3 @@ for yml_file in "$SERVICES_DIR"/*.yml; do
 done
 
 echo "All services stopped."
-
-read -p "Do you want to clear all Docker volumes? (y/N): " remove_vol
-if [[ "$remove_vol" =~ ^[Yy]$ ]]; then
-	read -p "WARNING: Permanent action, are you sure? (confirm YES): " confirm_vol
-    if [[ "$confirm_vol" == "YES" ]]; then
-        echo "Removing all Docker volumes..."
-    	docker volume ls -q | xargs -r docker volume rm
-    	echo "All Docker volumes have been removed."
-    else
-        echo "Skipping volume removal."
-    fi
-fi

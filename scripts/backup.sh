@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-BACKUP_DRIVE="/mnt/backup"
+# Use first script argument as backup drive, or default to /mnt/backup
+BACKUP_DRIVE="${1:-/mnt/backup}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_DIR="$BACKUP_DRIVE/docker_volumes_backup_$TIMESTAMP"
 
@@ -16,12 +17,12 @@ bash "$HOME/homelab/scripts/stop-services.sh"
 echo "Backing up Docker volumes to $BACKUP_DIR..."
 sudo mkdir -p "$BACKUP_DIR"
 
+# rsync all Docker volumes
 sudo rsync -av /var/lib/docker/volumes/ "$BACKUP_DIR/"
-
-# sudo rsync -a --delete /var/lib/docker/volumes/ "$BACKUP_DIR/"
 
 echo "Restarting stacks..."
 bash "$HOME/homelab/scripts/start-services.sh"
 
 echo "Backup completed successfully!"
 echo "Backup directory: $BACKUP_DIR"
+
