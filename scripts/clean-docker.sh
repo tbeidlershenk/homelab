@@ -7,6 +7,13 @@ if [[ "$confirm_vol" != "YES" ]]; then
     exit 0
 fi
 
+echo "Stopping stacks for cleanup..."
+bash "$HOME/homelab/scripts/stop-services.sh"
+
+echo "Removing all containers..."
+docker ps -a -q | xargs -r docker rm
+echo "All Docker containers have been removed."
+
 echo "Removing all Docker volumes..."
 docker volume ls -q | xargs -r docker volume rm
 echo "All Docker volumes have been removed."
