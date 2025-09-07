@@ -1,9 +1,24 @@
 #!/bin/bash
 
-# update system
+KEY_TITLE="homelab_$(date +%F)"
+SSH_KEY="$HOME/.ssh/github_ed25519"
+if [ -z "$GH_PAT" ]; then
+    echo "Error: GH_PAT environment variable is not set."
+    exit 1
+fi
+
+# Update system & install packages
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y curl git
+sudo apt install -y curl git gh
+
+# Setup GitHub access
+if [ ! -f $SSH_KEY ]; then
+    ssh-keygen -t ed25519 -f $SSH_KEY -N ""
+fi
+echo $GH_PAT | gh auth login --with-token
+gh ssh-key add $SSH_KEY.pub --title "$KEY_TITLE"
+ssh -T git@github.com
 
 # install docker
 if ! command -v docker &> /dev/null; then

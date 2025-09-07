@@ -7,13 +7,7 @@ services:
         ports:
             - "25565:25565"
         environment:
-            EULA: "TRUE"
-            MEMORY: "2048M"
+            EULA: ${MINECRAFT_EULA}
+            MEMORY: ${MINECRAFT_MEMORY}
         volumes:
-            # attach the relative directory 'data' to the container's /data path
-            - minecraft_data:/data
-
-volumes:
-    minecraft_data:
-        name: minecraft_data
-
+            - ${HOME}/homelab/volumes/minecraft/data:/data

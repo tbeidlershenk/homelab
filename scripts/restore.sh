@@ -4,10 +4,11 @@ set -e
 BASE_DIR="$HOME/homelab"
 SERVICES_DIR="$BASE_DIR/services"
 ENV_FILE="$BASE_DIR/.env"
-BACKUP_DIR="${1:-/mnt/backup}"  # Default backup location if none provided
+BACKUP_DIR="${1:-/mnt/backup}"
+VOLUMES_DIR=$HOME/homelab/volumes/
 
 # If multiple backups exist, pick the latest
-LATEST_BACKUP=$(ls -td "$BACKUP_DIR"/docker_volumes_backup_* 2>/dev/null | head -1)
+LATEST_BACKUP=$(ls -td "$BACKUP_DIR"/docker_volumes_backup_* 2>/dev/null | head -n1)
 
 if [ -z "$LATEST_BACKUP" ]; then
     echo "ERROR: No backup found in $BACKUP_DIR"
@@ -27,10 +28,10 @@ if [[ "$confirm_restore" != "YES" ]]; then
 fi
 
 # Restore volumes using rsync
-sudo rsync -av "$LATEST_BACKUP/" /var/lib/docker/volumes/
+sudo rsync -av "$LATEST_BACKUP/" "$VOLUMES_DIR"
 
 # Fix permissions if needed
-sudo chown -R root:root /var/lib/docker/volumes/
+sudo chmod -R 777 "$VOLUMES_DIR"
 
 # Restart all services
 bash "$BASE_DIR/scripts/start-services.sh"

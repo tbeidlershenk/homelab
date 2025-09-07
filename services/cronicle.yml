@@ -1,23 +1,25 @@
 services:
-  cronicle:
-    image: bluet/cronicle-docker:latest
-    container_name: cronicle
-    restart: unless-stopped
-    env_file:
-      - ../.env
-    ports:
-      - "3012:3012"
-    volumes:
-      - cronicle_data:/opt/cronicle/data
-      - cronicle_logs:/opt/cronicle/logs
-      - cronicle_plugins:/opt/cronicle/plugins
-    healthcheck:
-      disable: false
+    cronicle:
+        image: bluet/cronicle-docker:latest
+        container_name: cronicle
+        hostname: cronicle
+        restart: unless-stopped
+        env_file:
+            - ../.env
+        environment:
+            - TZ=${TIMEZONE}
+            - CRONICLE_smtp_hostname=${SMTP_HOSTNAME}
+            - CRONICLE_smtp_port=${SMTP_PORT}
+            - CRONICLE_email_from=${SMTP_EMAIL}
+            - CRONICLE_mail_options__auth__user=${SMTP_EMAIL}
+            - CRONICLE_mail_options__auth__pass=${SMTP_GMAIL_APP_PASSWORD}
+        ports:
+            - "3012:3012"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ${HOME}/homelab/volumes/cronicle/data:/opt/cronicle/data
+            - ${HOME}/homelab/volumes/cronicle/logs:/opt/cronicle/logs
+            - ${HOME}/homelab/volumes/cronicle/plugins:/opt/cronicle/plugins
+        healthcheck:
+            disable: false
 
-volumes:
-  cronicle_data:
-    name: cronicle_data
-  cronicle_logs:
-    name: cronicle_logs
-  cronicle_plugins:
-    name: cronicle_plugins

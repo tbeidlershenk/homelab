@@ -1,23 +1,16 @@
 services:
-  pihole:
-    image: pihole/pihole:latest
-    container_name: pihole
-    restart: unless-stopped
-    network_mode: "host"
-    env_file:
-      - ../.env
-    environment:
-      TZ: "${PIHOLE_TZ}"
-      WEBPASSWORD: "${PIHOLE_WEBPASSWORD}"
-    volumes:
-      - pihole_data:/etc/pihole
-      - pihole_dnsmasq:/etc/dnsmasq.d
-    healthcheck:
-      disable: false
-
-volumes:
-  pihole_data:
-    name: pihole_data
-  pihole_dnsmasq:
-    name: pihole_dnsmasq
-
+    pihole:
+        image: pihole/pihole:latest
+        container_name: pihole
+        restart: unless-stopped
+        network_mode: "host"
+        env_file:
+            - ../.env
+        environment:
+            TZ: "${TIMEZONE}"
+            WEBPASSWORD: "${PIHOLE_WEBPASSWORD}"
+        volumes:
+            - ${HOME}/homelab/volumes/pihole/data:/etc/pihole
+            - ${HOME}/homelab/volumes/pihole/dnsmasq:/etc/dnsmasq.d
+        healthcheck:
+          disable: false

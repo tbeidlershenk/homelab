@@ -1,25 +1,20 @@
 services:
-  tailscale:
-    image: tailscale/tailscale:latest
-    container_name: tailscale
-    restart: unless-stopped
-    network_mode: "host"
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    env_file:
-      - ../.env
-    environment:
-      TS_AUTHKEY: "${TS_AUTHKEY}"
-      TS_DNS: "${TS_DNS}"
-    volumes:
-      - tailscale_state:/var/lib/tailscale
-      - /dev/net/tun:/dev/net/tun
-    healthcheck:
-      disable: false
-
-volumes:
-  tailscale_state:
-    name: tailscale_state
-
+    tailscale:
+        image: tailscale/tailscale:latest
+        container_name: tailscale
+        restart: unless-stopped
+        network_mode: "host"
+        privileged: true
+        cap_add:
+            - NET_ADMIN
+            - NET_RAW
+        env_file:
+            - ../.env
+        environment:
+            TS_AUTHKEY: "${TAILSCALE_AUTHKEY}"
+            TS_DNS: "${TAILSCALE_DNS}"
+        volumes:
+            - ${HOME}/homelab/volumes/tailscale/data:/var/lib/tailscale
+            - /dev/net/tun:/dev/net/tun
+        healthcheck:
+            disable: false

@@ -15,6 +15,6 @@ docker ps -a -q | xargs -r docker rm
 echo "All Docker containers have been removed."
 
 echo "Removing all Docker volumes..."
-docker volume ls -q | xargs -r docker volume rm
+sudo rm -rf $HOME/homelab/volumes
 echo "All Docker volumes have been removed."
 
