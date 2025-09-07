@@ -1,86 +1,48 @@
 services:
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - ../config/prometheus.config.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-    ports:
-      - "9090:9090"
-    networks:
-      - monitoring
-    restart: unless-stopped
+    grafana:
+        container_name: grafana
+        image: grafana/grafana:latest
+        ports:
+            - "3000:3000"
+        environment:
+            - GF_SECURITY_ADMIN_PASSWORD=admin
+        volumes:
+            - grafana_data:/var/lib/grafana
+        depends_on: [prometheus]
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana_data:/var/lib/grafana
-    ports:
-      - "3000:3000"
-    networks:
-      - monitoring
-    restart: unless-stopped
+    prometheus:
+        container_name: prometheus
+        network_mode: "host"
+        image: prom/prometheus:latest
+        ports:
+            - "9090:9090"
+        volumes:
+            - ../config/prometheus.config.yml:/etc/prometheus/prometheus.yml:ro
+            - prometheus_data:/prometheus
 
-  node_exporter:
-    image: prom/node-exporter:latest
-    container_name: node_exporter
-    pid: host
-    network_mode: host
-    volumes:
-      - /:/host:ro,rslave
-    command:
-      - "--path.rootfs=/host"
-    restart: unless-stopped
+    node_exporter:
+        container_name: node_exporter
+        image: prom/node-exporter:latest
+        pid: "host"
+        network_mode: "host"
+        command: ["--collector.systemd", "--collector.processes"]
+        restart: unless-stopped
 
-  blackbox_exporter:
-    image: prom/blackbox-exporter:latest
-    container_name: blackbox_exporter
-    ports:
-      - "9115:9115"
-    networks:
-      - monitoring
-    restart: unless-stopped
 
-  loki:
-    image: grafana/loki:2.9.2
-    container_name: loki
-    command: -config.file=/etc/loki/config.yml
-    volumes:
-      - ../config/loki.config.yml:/etc/loki/config.yml:ro
-      - loki_data:/loki
-    ports:
-      - "3100:3100"
-    networks:
-      - monitoring
-    restart: unless-stopped
-
-  promtail:
-    image: grafana/promtail:2.9.2
-    container_name: promtail
-    volumes:
-      - /var/log:/var/log:ro
-      - /etc/machine-id:/etc/machine-id:ro
-      - ../config/promtail.config.yml:/etc/promtail/config.yml:ro
-    command: -config.file=/etc/promtail/config.yml
-    networks:
-      - monitoring
-    restart: unless-stopped
+    cadvisor:
+        container_name: cadvisor
+        image: gcr.io/cadvisor/cadvisor:latest
+        network_mode: "host"
+        pid: "host"
+        volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:ro
+            - /sys:/sys:ro
+            - /var/lib/docker/:/var/lib/docker:ro
+        restart: unless-stopped
 
 volumes:
-  prometheus_data:
-    name: prometheus_data
-  grafana_data:
-    name: grafana_data
-  loki_data:
-    name: loki_data
-
-networks:
-  monitoring:
-    driver: bridge
+    grafana_data:
+        name: grafana_data
+    prometheus_data:
+        name: prometheus_data

@@ -1,36 +1,16 @@
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+    scrape_interval: 15s
 
 scrape_configs:
-  # Prometheus itself
-  - job_name: "prometheus"
-    static_configs:
-      - targets: ["prometheus:9090"]
+    - job_name: "prometheus"
+      static_configs:
+          - targets: ["localhost:9090"]
 
-  # Node Exporter (system metrics: CPU, RAM, Disk, Network, Power if supported)
-  - job_name: "node_exporter"
-    static_configs:
-      - targets: ["node_exporter:9100"]
+    - job_name: "node"
+      static_configs:
+          - targets: ["localhost:9100"]
 
-  # Blackbox Exporter (service/uptime checks)
-  - job_name: "blackbox"
-    metrics_path: /probe
-    params:
-      module: [http_2xx]  # HTTP check
-    static_configs:
-      - targets:
-          - https://example.com    # Replace with sites you want to monitor
-          - http://localhost:3000  # Example: Grafana itself
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
-      - target_label: __address__
-        replacement: blackbox_exporter:9115  # Blackbox exporter service
+    - job_name: "cadvisor"
+      static_configs:
+          - targets: ["localhost:8080"]
 
-  # Loki (monitor Loki’s own metrics)
-  - job_name: "loki"
-    static_configs:
-      - targets: ["loki:3100"]
