@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
 set -e
 
-BASE_DIR="$HOME/homelab"
-SERVICES_DIR="$BASE_DIR/services"
-ENV_FILE="$BASE_DIR/.env"
-BACKUP_DIR="${1:-/mnt/backup}"
-VOLUMES_DIR=$HOME/homelab/volumes/
+TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+HOMELAB_USER=$(whoami)
+HOMELAB_DIR="$HOME/homelab"
+SERVICES_DIR="$HOMELAB_DIR/services"
+ENV_FILE="$HOMELAB_DIR/.env"
 
-# If multiple backups exist, pick the latest
-LATEST_BACKUP=$(ls -td "$BACKUP_DIR"/docker_volumes_backup_* 2>/dev/null | head -n1)
+# Use first script argument as backup drive, or default to /mnt/backup
+BACKUP_DRIVE="${1:-/mnt/backup}"
+BACKUP_DIR="$BACKUP_DRIVE/volumes"
+VOLUMES_DIR=$HOMELAB_DIR/volumes
 
-if [ -z "$LATEST_BACKUP" ]; then
-    echo "ERROR: No backup found in $BACKUP_DIR"
+if [ ! -d "$BACKUP_DIR" ]; then
+    echo "ERROR: Volumes directory not found at $BACKUP_DIR"
     exit 1
 fi
-
-echo "Restoring Docker volumes from backup: $LATEST_BACKUP"
+echo "Restoring Docker volumes from backup: $BACKUP_DIR"
 
 # Stop all services
-bash "$BASE_DIR/scripts/stop-services.sh"
+bash "$HOMELAB_DIR/scripts/stop-services.sh"
 
 # Confirm before overwriting volumes
 read -p "WARNING: This will overwrite existing Docker volumes. Proceed? (confirm YES): " confirm_restore
@@ -27,14 +28,15 @@ if [[ "$confirm_restore" != "YES" ]]; then
     exit 0
 fi
 
-# Restore volumes using rsync
-sudo rsync -av "$LATEST_BACKUP/" "$VOLUMES_DIR"
+# Log restore time
+echo "Restore time: $TIMESTAMP"
+echo "$TIMESTAMP - ran restore" >> "$HOME/homelab/logs/backup.log"
 
-# Fix permissions if needed
-sudo chmod -R 777 "$VOLUMES_DIR"
+# Restore volumes using rsync
+sudo rsync -av "$BACKUP_DIR/" "$VOLUMES_DIR"
 
 # Restart all services
-bash "$BASE_DIR/scripts/start-services.sh"
+bash "$HOMELAB_DIR/scripts/start-services.sh"
 
 echo "Restore completed successfully!"
 

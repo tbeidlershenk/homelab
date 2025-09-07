@@ -7,6 +7,9 @@ if [ -z "$GH_PAT" ]; then
     exit 1
 fi
 
+# Set up directories
+mkdir -p $HOME/homelab/logs
+
 # Update system & install packages
 sudo apt update
 sudo apt upgrade -y

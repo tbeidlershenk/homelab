@@ -2,6 +2,7 @@ services:
     pihole:
         image: pihole/pihole:latest
         container_name: pihole
+        user: root:root
         restart: unless-stopped
         network_mode: "host"
         env_file:

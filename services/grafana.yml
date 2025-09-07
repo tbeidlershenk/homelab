@@ -2,6 +2,7 @@ services:
     grafana:
         image: grafana/grafana:latest
         container_name: grafana
+        user: root:root
         ports:
             - "3000:3000"
         environment:
@@ -13,6 +14,7 @@ services:
     prometheus:
         image: prom/prometheus:latest
         container_name: prometheus
+        user: root:root
         ports:
             - "9090:9090"
         volumes:
@@ -22,6 +24,7 @@ services:
     node_exporter:
         image: prom/node-exporter:latest
         container_name: node-exporter
+        user: root:root
         pid: "host"
         network_mode: "host"
         command: ["--collector.systemd", "--collector.processes"]
