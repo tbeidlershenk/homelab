@@ -7,13 +7,24 @@ if [ -z "$GH_PAT" ]; then
     exit 1
 fi
 
+# Ensure in homelab directory (sanity check)
+cd $HOME/homelab || { echo "Error: homelab directory not found."; exit 1; }
+
 # Set up directories
 mkdir -p $HOME/homelab/logs
+
+# Ensure execute permissions (sanity check)
+chmod +x scripts/*
 
 # Update system & install packages
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y curl git gh
+sudo apt install -y curl git gh python3.12-venv
+
+# Set up Python environment
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
 # Setup GitHub access
 if [ ! -f $SSH_KEY ]; then
@@ -23,7 +34,7 @@ echo $GH_PAT | gh auth login --with-token
 gh ssh-key add $SSH_KEY.pub --title "$KEY_TITLE"
 ssh -T git@github.com
 
-# install docker
+# Install Docker
 if ! command -v docker &> /dev/null; then
     echo "Docker not found. Installing Docker using official get-docker.sh script..."
     curl -fsSL https://get.docker.com -o get-docker.sh
@@ -35,7 +46,7 @@ else
     echo "Docker is installed."
 fi
 
-# start docker service
+# Start Docker service
 if ! systemctl is-active --quiet docker; then
     echo "Docker service is not running. Starting Docker..."
     sudo systemctl enable docker
