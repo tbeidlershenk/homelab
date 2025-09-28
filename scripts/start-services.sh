@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+echo "DEBUG: args = $@"
+echo "DEBUG: ENV_FILE=$ENV_FILE"
+
 HOMELAB_DIR="$HOME/homelab"
 
 # Defaults
