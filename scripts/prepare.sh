@@ -1,24 +1,31 @@
 #!/bin/bash
 
-REPO="tbeidlershenk/homelab"
-EMAIL="tbeidlershenk@gmail.com"
-NAME="Tobias Beidler-Shenk"
+# Source environment variables
+ENV_FILE=${1:-.env}
+[ ! -f "$ENV_FILE" ] && echo "Error: Environment file not found: $ENV_FILE" && exit 1 
+set -a; source "$ENV_FILE"; set +a
 
+# Verify required environment variables are set
+[ -z "$GITHUB_PAT" ] && echo "Error: GITHUB_PAT is not set in $ENV_FILE" && exit 1 
+[ -z "$REPO" ] && echo "Error: REPO is not set in $ENV_FILE" && exit 1 
+[ -z "$EMAIL" ] && echo "Error: EMAIL is not set in $ENV_FILE" && exit 1 
+[ -z "$USER" ] && echo "Error: USER is not set in $ENV_FILE" && exit 1
+[ -z "$TAILSCALE_AUTHKEY" ] && echo "Error: TAILSCALE_AUTHKEY is not set in $ENV_FILE" && exit 1
+[ -z "$TAILSCALE_HOSTNAME" ] && echo "Error: TAILSCALE_HOSTNAME is not set in $ENV_FILE" && exit 1
+[ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set in $ENV_FILE" && exit 1
+
+# Other variables
 KEY_TITLE="homelab_$(date +%F)"
 SSH_KEY="$HOME/.ssh/id_ed25519"
-if [ -z "$GH_PAT" ]; then
-    echo "Error: GH_PAT environment variable is not set."
-    exit 1
-fi
 
 # Ensure in homelab directory (sanity check)
-cd $HOME/homelab || { echo "Error: homelab directory not found."; exit 1; }
+cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 
 # Set up directories
-mkdir -p $HOME/homelab/logs
+mkdir -p $BASE_DIR/logs
 
 # Ensure execute permissions (sanity check)
-chmod +x scripts/*
+chmod +x $BASE_DIR/scripts/*
 
 # Update system & install packages
 sudo apt update
@@ -29,20 +36,20 @@ sudo apt install -y curl git gh yq
 if [ ! -f $SSH_KEY ]; then
     ssh-keygen -t ed25519 -f $SSH_KEY -N ""
 fi
-echo $GH_PAT | gh auth login --with-token
+echo $GITHUB_PAT | gh auth login --with-token
 gh ssh-key add $SSH_KEY.pub --title "$KEY_TITLE"
 ssh -T git@github.com
 
 # Set SSH secrets
 gh secret set SSH_PRIVATE_KEY -b @"$SSH_KEY" --repo "$REPO"
 gh secret set SSH_USER -b "$USER" --repo "$REPO"
-gh secret set SSH_HOST -b "your.server.com" --repo "$REPO"
+gh secret set SSH_HOST -b "homelab" --repo "$REPO"
 echo "Updated GitHub Actions secrets for repository $REPO."
 
 # Set Git config
 git config --global user.email "tbeidlershenk@gmail.com"
 git config --global user.name "Tobias Beidler-Shenk"
-git config --global user.token $GH_PAT
+git config --global user.token $GITHUB_PAT
 
 # Install Docker
 if ! command -v docker &> /dev/null; then
@@ -64,3 +71,10 @@ if ! systemctl is-active --quiet docker; then
 else
     echo "Docker service is running."
 fi
+
+# Install Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up --ssh --authkey "$TAILSCALE_AUTHKEY" --hostname "$TAILSCALE_HOSTNAME" --accept-routes
+
+# Enable Tailscale service
+sudo systemctl enable --now tailscaled

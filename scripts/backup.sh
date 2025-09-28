@@ -1,30 +1,21 @@
 #!/usr/bin/env bash
 set -e
 
+# Source environment variables
+ENV_FILE=${1:-.env}
+[ ! -f "$ENV_FILE" ] && echo "Error: Environment file not found: $ENV_FILE" && exit 1 
+set -a; source "$ENV_FILE"; set +a
+
+# Verify required environment variables are set
+[ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set in $ENV_FILE" && exit 1
+[ -z "$REGISTRY_FILE" ] && echo "Error: REGISTRY_FILE is not set in $ENV_FILE" && exit 1
+[ -z "$BACKUP_DIR" ] && echo "Error: BACKUP_DIR is not set in $ENV_FILE" && exit 1
+[ ! -d "$BACKUP_DIR" ] && echo "ERROR: Backup directory not found at $BACKUP_DIR" && exit 1
+
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-HOMELAB_DIR="$HOME/homelab"
-SCRIPTS_DIR="$HOMELAB_DIR/scripts"
-VOLUMES_DIR="$HOMELAB_DIR/volumes"
-LOGS_DIR="$HOMELAB_DIR/logs"
-
-# Defaults
-BACKUP_DRIVE="/mnt/backup"
-ENV_FILE="$HOMELAB_DIR/.env"
-REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
-
-# Parse flags
-while getopts "d:e:r:" opt; do
-  case $opt in
-    d) BACKUP_DRIVE="$OPTARG" ;;
-    e) ENV_FILE="$OPTARG" ;;
-    r) REGISTRY_FILE="$OPTARG" ;;
-    *) echo "Usage: $0 [-d backup_drive] [-e env_file] [-r registry_file]"; exit 1 ;;
-  esac
-done
-
-BACKUP_DIR="$BACKUP_DRIVE/volumes"
-
-[ -d "$BACKUP_DRIVE" ] || { echo "ERROR: Backup drive not found at $BACKUP_DRIVE"; exit 1; }
+SCRIPTS_DIR="$BASE_DIR/scripts"
+VOLUMES_DIR="$BASE_DIR/volumes"
+LOGS_DIR="$BASE_DIR/logs"
 
 echo "Backing up Docker volumes to: $BACKUP_DIR"
 

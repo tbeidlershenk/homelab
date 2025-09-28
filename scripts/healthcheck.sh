@@ -1,26 +1,16 @@
 #!/usr/bin/env bash
 set -e
 
-HOMELAB_DIR="$HOME/homelab"
-TIMEOUT=120          # max wait time in seconds
-SLEEP_INTERVAL=5     # seconds between checks
+# Source environment variables
+ENV_FILE=${1:-.env}
+[ ! -f "$ENV_FILE" ] && echo "Error: Environment file not found: $ENV_FILE" && exit 1 
+set -a; source "$ENV_FILE"; set +a
 
-# Defaults
-ENV_FILE="$HOMELAB_DIR/.env"
-REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
-
-# Parse flags
-while getopts "e:r:" opt; do
-  case $opt in
-    e) ENV_FILE="$OPTARG" ;;
-    r) REGISTRY_FILE="$OPTARG" ;;
-    *) echo "Usage: $0 [-e env_file] [-r registry_file]"; exit 1 ;;
-  esac
-done
-
-# Check that .env and registry exist
-[ -f "$ENV_FILE" ] || { echo "ERROR: .env file not found at $ENV_FILE"; exit 1; }
-[ -f "$REGISTRY_FILE" ] || { echo "ERROR: registry file not found at $REGISTRY_FILE"; exit 1; }
+# Verify required environment variables are set
+[ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set in $ENV_FILE" && exit 1
+[ -z "$REGISTRY_FILE" ] && echo "Error: REGISTRY_FILE is not set in $ENV_FILE" && exit 1
+[ -z "$HEALTHCHECK_TIMEOUT" ] && HEALTHCHECK_TIMEOUT=300
+[ -z "$HEALTHCHECK_INTERVAL" ] && HEALTHCHECK_INTERVAL=10
 
 echo "Checking health of all enabled services with healthchecks..."
 
@@ -53,14 +43,14 @@ for yml_file in $services; do
             break
         fi
 
-        if [ "$elapsed" -ge "$TIMEOUT" ]; then
-            echo "ERROR: The following containers in '$project_name' are still unhealthy after $TIMEOUT seconds:"
+        if [ "$elapsed" -ge "$HEALTHCHECK_TIMEOUT" ]; then
+            echo "ERROR: The following containers in '$project_name' are still unhealthy after $HEALTHCHECK_TIMEOUT seconds:"
             echo "$unhealthy"
             exit 1
         fi
 
-        sleep $SLEEP_INTERVAL
-        elapsed=$((elapsed + SLEEP_INTERVAL))
+        sleep $HEALTHCHECK_INTERVAL
+        elapsed=$((elapsed + HEALTHCHECK_INTERVAL))
     done
 done
 

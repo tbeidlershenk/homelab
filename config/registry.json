@@ -9,14 +9,6 @@
       "pause_on_backup": false
     },
     {
-      "name": "tailscale",
-      "path": "services/tailscale.yml",
-      "profile": "core",
-      "enabled": true,
-      "healthcheck": false,
-      "pause_on_backup": false
-    },
-    {
       "name": "pihole",
       "path": "services/pihole.yml",
       "profile": "core",
