@@ -10,13 +10,17 @@ ENV_FILE="$HOMELAB_DIR/.env"
 REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
 
 # Parse flags
-while getopts "d:e:r:" opt; do
+while getopts "e:r:" opt; do
   case $opt in
     e) ENV_FILE="$OPTARG" ;;
     r) REGISTRY_FILE="$OPTARG" ;;
     *) echo "Usage: $0 [-e env_file] [-r registry_file]"; exit 1 ;;
   esac
 done
+
+# Check that .env and registry exist
+[ -f "$ENV_FILE" ] || { echo "ERROR: .env file not found at $ENV_FILE"; exit 1; }
+[ -f "$REGISTRY_FILE" ] || { echo "ERROR: registry file not found at $REGISTRY_FILE"; exit 1; }
 
 echo "Checking health of all enabled services with healthchecks..."
 

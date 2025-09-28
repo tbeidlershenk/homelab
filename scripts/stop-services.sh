@@ -9,7 +9,7 @@ ENV_FILE="$HOMELAB_DIR/.env"
 REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
 
 # Parse flags
-while getopts "d:e:r:" opt; do
+while getopts "e:r:" opt; do
   case $opt in
     e) ENV_FILE="$OPTARG" ;;
     r) REGISTRY_FILE="$OPTARG" ;;
