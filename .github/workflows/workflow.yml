@@ -50,18 +50,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Install Tailscale CLI
-      - name: Install Tailscale
-        run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
-
-      # Authenticate runner with Tailscale via OAuth
-      - name: Connect to Tailscale
-        run: |
-          sudo tailscale up --oauth-client=$TAILSCALE_OAUTH_CLIENT \
-                           --oauth-client-secret=$TAILSCALE_OAUTH_SECRET \
-                           --hostname=github-runner
-
       # Deploy to homelab over Tailscale SSH
       - name: Connect Tailscale
         uses: tailscale/github-action@v2
