@@ -8,7 +8,7 @@ SERVICES_DIR="$HOMELAB_DIR/services"
 SCRIPTS_DIR="$HOMELAB_DIR/scripts"
 VOLUMES_DIR=$HOMELAB_DIR/volumes
 LOGS_DIR="$HOMELAB_DIR/logs"
-ENV_FILE="$HOMELAB_DIR/.env"
+ENV_FILE="$BASE_DIR/${1:-.env}"
 
 # Use first script argument as backup drive
 # Default to /mnt/backup

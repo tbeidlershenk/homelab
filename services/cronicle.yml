@@ -2,6 +2,7 @@ services:
     cronicle:
         image: bluet/cronicle-docker:latest
         container_name: cronicle
+        profiles: ["enabled"]
         user: root:root
         hostname: cronicle
         restart: unless-stopped

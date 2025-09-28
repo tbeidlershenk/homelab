@@ -1,7 +1,7 @@
 #!/bin/bash
 
 KEY_TITLE="homelab_$(date +%F)"
-SSH_KEY="$HOME/.ssh/github_ed25519"
+SSH_KEY="$HOME/.ssh/id_ed25519"
 if [ -z "$GH_PAT" ]; then
     echo "Error: GH_PAT environment variable is not set."
     exit 1
@@ -19,12 +19,7 @@ chmod +x scripts/*
 # Update system & install packages
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y curl git gh python3.12-venv
-
-# Set up Python environment
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+sudo apt install -y curl git gh
 
 # Setup GitHub access
 if [ ! -f $SSH_KEY ]; then

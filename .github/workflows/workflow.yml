@@ -1,0 +1,82 @@
+name: Homelab CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # optional manual trigger
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Set up Docker
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      # 3. Build & start containers
+      - name: Build and run services
+        run: |
+          docker compose -f services/app.yml build
+          docker compose -f services/app.yml up -d
+          docker compose -f services/other.yml build
+          docker compose -f services/other.yml up -d
+
+      # 4. Smoke tests
+      - name: Smoke tests
+        run: |
+          # Check containers are running
+          docker ps --filter "name=myapp" --format "{{.Names}}" | grep myapp
+          docker ps --filter "name=other_service" --format "{{.Names}}" | grep other_service
+
+          # Minimal endpoint checks
+          curl -f http://localhost:8080/health
+          curl -f http://localhost:9090/health
+
+      # 5. Tear down test containers
+      - name: Tear down
+        run: |
+          docker compose -f services/app.yml down -v
+          docker compose -f services/other.yml down -v
+
+  deploy:
+    needs: test-deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up SSH agent
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # SSH into server and deploy
+      - name: Deploy to server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/my-docker-repo
+
+            # Pull latest code
+            git fetch --all
+            git reset --hard origin/main
+
+            # Optional: stop services before deployment
+            docker compose -f services/app.yml down -v
+            docker compose -f services/other.yml down -v
+
+            # Pull new images (for public images)
+            docker compose -f services/app.yml pull
+            docker compose -f services/other.yml pull
+
+            # Start services
+            docker compose -f services/app.yml up -d
+            docker compose -f services/other.yml up -d
+          EOF
