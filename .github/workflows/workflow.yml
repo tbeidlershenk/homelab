@@ -37,11 +37,17 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: ${{ secrets.SSH_PRIVATE_KEY && secrets.SSH_USER && secrets.SSH_HOST }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Check SSH secrets
+        run: |
+          if [[ -z "${{ secrets.SSH_PRIVATE_KEY }}" || -z "${{ secrets.SSH_USER }}" || -z "${{ secrets.SSH_HOST }}" ]]; then
+            echo "SSH secrets not set. Skipping deploy."
+            exit 0
+          fi
 
       # Set up SSH agent
       - name: Setup SSH
