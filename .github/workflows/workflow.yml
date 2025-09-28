@@ -23,17 +23,19 @@ jobs:
       - name: Start services
         working-directory: ${{ github.workspace }}
         run: |
-          ./scripts/start-services.sh -e ".test.env" -r "config/registry.json"
+          ./scripts/start-services.sh .test.env
 
       # 4. Healthcheck
       - name: Run Healthcheck
+        working-directory: ${{ github.workspace }}
         run: |
-          ./scripts/healthcheck.sh -e ".test.env" -r "config/registry.json"
+          ./scripts/healthcheck.sh .test.env
 
       # 5. Tear down test containers
       - name: Tear down
+        working-directory: ${{ github.workspace }}
         run: |
-          ./scripts/stop-services.sh -e ".test.env" -r "config/registry.json"
+          ./scripts/stop-services.sh .test.env
 
   deploy:
     needs: test
