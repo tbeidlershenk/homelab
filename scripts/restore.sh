@@ -14,7 +14,7 @@ BACKUP_DRIVE="${1:-/mnt/backup}"
 BACKUP_DIR="$BACKUP_DRIVE/volumes"
 
 # Second argument: env file name, default .env
-ENV_FILE="$HOMELAB_DIR/${2:-.env}"
+ENV_FILE="${1:-$HOMELAB_DIR/.env}"
 
 [ -d "$BACKUP_DIR" ] || { echo "ERROR: Backup directory not found at $BACKUP_DIR"; exit 1; }
 

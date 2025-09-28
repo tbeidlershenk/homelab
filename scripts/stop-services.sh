@@ -4,7 +4,7 @@ set -e
 BASE_DIR="$HOME/homelab"
 SERVICES_DIR="$BASE_DIR/services"
 REGISTRY_FILE="$BASE_DIR/config/registry.json"
-ENV_FILE="$BASE_DIR/${1:-.env}"
+ENV_FILE="${1:-$BASE_DIR/.env}"
 
 [ -f "$ENV_FILE" ] || { echo "ERROR: .env file not found at $ENV_FILE"; exit 1; }
 [ -f "$REGISTRY_FILE" ] || { echo "ERROR: registry file not found at $REGISTRY_FILE"; exit 1; }

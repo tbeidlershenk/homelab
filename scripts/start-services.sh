@@ -3,7 +3,7 @@ set -e
 
 BASE_DIR="$HOME/homelab"
 REGISTRY_FILE="$BASE_DIR/config/registry.json"
-ENV_FILE="$BASE_DIR/${1:-.env}"
+ENV_FILE="${1:-$BASE_DIR/.env}"
 
 # Check that .env and registry exist
 [ -f "$ENV_FILE" ] || { echo "ERROR: .env file not found at $ENV_FILE"; exit 1; }

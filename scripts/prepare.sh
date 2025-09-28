@@ -1,6 +1,9 @@
 #!/bin/bash
 
 REPO="tbeidlershenk/homelab"
+EMAIL="tbeidlershenk@gmail.com"
+NAME="Tobias Beidler-Shenk"
+
 KEY_TITLE="homelab_$(date +%F)"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 if [ -z "$GH_PAT" ]; then
@@ -35,6 +38,11 @@ gh secret set SSH_PRIVATE_KEY -b @"$SSH_KEY" --repo "$REPO"
 gh secret set SSH_USER -b "$USER" --repo "$REPO"
 gh secret set SSH_HOST -b "your.server.com" --repo "$REPO"
 echo "Updated GitHub Actions secrets for repository $REPO."
+
+# Set Git config
+git config --global user.email "tbeidlershenk@gmail.com"
+git config --global user.name "Tobias Beidler-Shenk"
+git config --global user.token $GH_PAT
 
 # Install Docker
 if ! command -v docker &> /dev/null; then

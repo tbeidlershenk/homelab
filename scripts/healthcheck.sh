@@ -5,7 +5,7 @@ HOMELAB_DIR="$HOME/homelab"
 REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
 TIMEOUT=120          # max wait time in seconds
 SLEEP_INTERVAL=5     # seconds between checks
-ENV_FILE="$HOMELAB_DIR/${1:-.env}"
+ENV_FILE="${1:-$HOMELAB_DIR/.env}"
 
 echo "Checking health of all enabled services with healthchecks..."
 
