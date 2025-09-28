@@ -45,6 +45,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Debug secrets
+        run: |
+          echo "Client length: ${#TAILSCALE_OAUTH_CLIENT}"
+          echo "Secret length: ${#TAILSCALE_OAUTH_SECRET}"
+        env:
+          TAILSCALE_OAUTH_CLIENT: ${{ secrets.TAILSCALE_OAUTH_CLIENT }}
+          TAILSCALE_OAUTH_SECRET: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
+          
       # Deploy to homelab over Tailscale SSH
       - name: Connect Tailscale
         uses: tailscale/github-action@v2
