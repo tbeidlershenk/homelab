@@ -2,10 +2,21 @@
 set -e
 
 HOMELAB_DIR="$HOME/homelab"
-REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
 TIMEOUT=120          # max wait time in seconds
 SLEEP_INTERVAL=5     # seconds between checks
-ENV_FILE="${1:-$HOMELAB_DIR/.env}"
+
+# Defaults
+ENV_FILE="$HOMELAB_DIR/.env"
+REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
+
+# Parse flags
+while getopts "d:e:r:" opt; do
+  case $opt in
+    e) ENV_FILE="$OPTARG" ;;
+    r) REGISTRY_FILE="$OPTARG" ;;
+    *) echo "Usage: $0 [-e env_file] [-r registry_file]"; exit 1 ;;
+  esac
+done
 
 echo "Checking health of all enabled services with healthchecks..."
 

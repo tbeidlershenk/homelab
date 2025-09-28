@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
-BASE_DIR="$HOME/homelab"
-REGISTRY_FILE="$BASE_DIR/config/registry.json"
-ENV_FILE="${1:-$BASE_DIR/.env}"
+HOMELAB_DIR="$HOME/homelab"
+
+# Defaults
+ENV_FILE="$HOMELAB_DIR/.env"
+REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
+
+# Parse flags
+while getopts "d:e:r:" opt; do
+  case $opt in
+    e) ENV_FILE="$OPTARG" ;;
+    r) REGISTRY_FILE="$OPTARG" ;;
+    *) echo "Usage: $0 [-e env_file] [-r registry_file]"; exit 1 ;;
+  esac
+done
 
 # Check that .env and registry exist
 [ -f "$ENV_FILE" ] || { echo "ERROR: .env file not found at $ENV_FILE"; exit 1; }

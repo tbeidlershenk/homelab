@@ -6,14 +6,23 @@ HOMELAB_DIR="$HOME/homelab"
 SCRIPTS_DIR="$HOMELAB_DIR/scripts"
 VOLUMES_DIR="$HOMELAB_DIR/volumes"
 LOGS_DIR="$HOMELAB_DIR/logs"
+
+# Defaults
+BACKUP_DRIVE="/mnt/backup"
+ENV_FILE="$HOMELAB_DIR/.env"
 REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
 
-# First argument: backup drive, default /mnt/backup
-BACKUP_DRIVE="${1:-/mnt/backup}"
-BACKUP_DIR="$BACKUP_DRIVE/volumes"
+# Parse flags
+while getopts "d:e:r:" opt; do
+  case $opt in
+    d) BACKUP_DRIVE="$OPTARG" ;;
+    e) ENV_FILE="$OPTARG" ;;
+    r) REGISTRY_FILE="$OPTARG" ;;
+    *) echo "Usage: $0 [-d backup_drive] [-e env_file] [-r registry_file]"; exit 1 ;;
+  esac
+done
 
-# Second argument: env file name, default .env
-ENV_FILE="${1:-$HOMELAB_DIR/.env}"
+BACKUP_DIR="$BACKUP_DRIVE/volumes"
 
 [ -d "$BACKUP_DRIVE" ] || { echo "ERROR: Backup drive not found at $BACKUP_DRIVE"; exit 1; }
 
