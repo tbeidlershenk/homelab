@@ -20,12 +20,9 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       # 3. Build & start containers
-      - name: Build and run services
+      - name: Start services
         run: |
-          docker compose -f services/app.yml build
-          docker compose -f services/app.yml up -d
-          docker compose -f services/other.yml build
-          docker compose -f services/other.yml up -d
+          ./services/start-services.sh .test.env
 
       # 4. Smoke tests
       - name: Smoke tests

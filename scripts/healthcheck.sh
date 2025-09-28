@@ -20,6 +20,8 @@ while [ $SECONDS_ELAPSED -lt $TIMEOUT ]; do
     for CID in $CONTAINERS; do
         STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CID 2>/dev/null)
         if [ "$STATUS" != "healthy" ]; then
+            NAME=$(docker inspect --format='{{.Name}}' $CID 2>/dev/null | sed 's/^\/\(.*\)/\1/')
+            echo "Container $NAME is not healthy (status: $STATUS)"
             UNHEALTHY=1
             break
         fi

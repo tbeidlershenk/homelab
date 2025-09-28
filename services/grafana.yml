@@ -2,6 +2,7 @@ services:
     grafana:
         image: grafana/grafana:latest
         container_name: grafana
+        profiles: ["enabled"]
         user: root:root
         network_mode: "host"
         ports:
@@ -15,6 +16,7 @@ services:
     prometheus:
         image: prom/prometheus:latest
         container_name: prometheus
+        profiles: ["enabled"]
         user: root:root
         network_mode: "host"
         restart: unless-stopped
@@ -27,6 +29,7 @@ services:
     node-exporter:
         image: prom/node-exporter:latest
         container_name: node-exporter
+        profiles: ["enabled"]
         user: root:root
         pid: "host"
         network_mode: "host"
