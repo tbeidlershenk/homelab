@@ -2,43 +2,45 @@
 set -e
 
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-HOMELAB_USER=$(whoami)
 HOMELAB_DIR="$HOME/homelab"
-SERVICES_DIR="$HOMELAB_DIR/services"
 SCRIPTS_DIR="$HOMELAB_DIR/scripts"
-VOLUMES_DIR=$HOMELAB_DIR/volumes
+VOLUMES_DIR="$HOMELAB_DIR/volumes"
 LOGS_DIR="$HOMELAB_DIR/logs"
-ENV_FILE="$BASE_DIR/${1:-.env}"
+REGISTRY_FILE="$HOMELAB_DIR/services/registry.yml"
 
-# Use first script argument as backup drive
-# Default to /mnt/backup
+# First argument: backup drive, default /mnt/backup
 BACKUP_DRIVE="${1:-/mnt/backup}"
 BACKUP_DIR="$BACKUP_DRIVE/volumes"
 
-if [ ! -d "$BACKUP_DRIVE" ]; then
-    echo "ERROR: Backup drive not found at $BACKUP_DRIVE"
-    exit 1
-fi
+[ -d "$BACKUP_DRIVE" ] || { echo "ERROR: Backup drive not found at $BACKUP_DRIVE"; exit 1; }
+
 echo "Backing up Docker volumes to: $BACKUP_DIR"
 
-# Stop all services
-echo "Stopping all services..."
-bash "$SCRIPTS_DIR/stop-services.sh"
+# Pause services marked pause_on_backup: true
+echo "Pausing services for backup..."
+while IFS= read -r yml_file; do
+  project_name=$(basename "$yml_file" .yml)
+  echo "Pausing $project_name..."
+  docker compose -f "$yml_file" -p "$project_name" pause || true
+done < <(yq eval '.services[] | select(.enabled == true and .pause_on_backup == true) | .path' "$REGISTRY_FILE")
 
 # Log backup time
-echo "Backup time: $TIMESTAMP"
 echo "$TIMESTAMP - ran backup" >> "$LOGS_DIR/backup.log"
 
-# Create backup directory if it doesn't exist
-echo "Backing up Docker volumes to $BACKUP_DIR..."
+# Ensure backup directory exists
 sudo mkdir -p "$BACKUP_DIR"
 
-# Backup volumes
+# Run rsync backup
 sudo rsync -av "$VOLUMES_DIR/" "$BACKUP_DIR"
 
-# Restart all services
-echo "Restarting all services..."
-bash "$SCRIPTS_DIR/start-services.sh"
+# Unpause services after backup
+echo "Resuming paused services..."
+while IFS= read -r yml_file; do
+  project_name=$(basename "$yml_file" .yml)
+  echo "Resuming $project_name..."
+  docker compose -f "$yml_file" -p "$project_name" unpause || true
+done < <(yq eval '.services[] | select(.enabled == true and .pause_on_backup == true) | .path' "$REGISTRY_FILE")
+
 
 echo "Backup completed successfully!"
 echo "Backed up to directory: $BACKUP_DIR"

@@ -22,8 +22,12 @@ fi
 echo "Restoring Docker volumes from backup: $BACKUP_DIR"
 
 # Stop all services
-echo "Stopping all services..."
-bash "$SCRIPTS_DIR/stop-services.sh"
+echo "Pausing services for restore..."
+while IFS= read -r yml_file; do
+  project_name=$(basename "$yml_file" .yml)
+  echo "Pausing $project_name..."
+  docker compose -f "$yml_file" -p "$project_name" pause || true
+done < <(yq eval '.services[] | select(.enabled == true and .pause_on_backup == true) | .path' "$REGISTRY_FILE")
 
 # Confirm before overwriting volumes
 read -p "WARNING: This will overwrite existing Docker volumes at $VOLUMES_DIR. Proceed? (confirm YES): " confirm_restore
@@ -40,8 +44,12 @@ echo "$TIMESTAMP - ran restore" >> "$LOGS_DIR/backup.log"
 sudo rsync -av "$BACKUP_DIR/" "$VOLUMES_DIR"
 
 # Restart all services
-echo "Restarting all services..."
-bash "$SCRIPTS_DIR/start-services.sh"
+echo "Resuming paused services..."
+while IFS= read -r yml_file; do
+  project_name=$(basename "$yml_file" .yml)
+  echo "Resuming $project_name..."
+  docker compose -f "$yml_file" -p "$project_name" unpause || true
+done < <(yq eval '.services[] | select(.enabled == true and .pause_on_backup == true) | .path' "$REGISTRY_FILE")
 
 echo "Restore completed successfully!"
 echo "Restored from backup directory: $BACKUP_DIR"
