@@ -40,11 +40,6 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    env:
-      TAILSCALE_OAUTH_CLIENT: ${{ secrets.TAILSCALE_OAUTH_CLIENT }}
-      TAILSCALE_OAUTH_SECRET: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
-      SSH_HOST: ${{ secrets.SSH_HOST }}
-      SSH_USER: ${{ secrets.SSH_USER }}
 
     steps:
       - name: Checkout code
@@ -54,8 +49,8 @@ jobs:
       - name: Connect Tailscale
         uses: tailscale/github-action@v2
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
 
       - name: Deploy to server
         run: |
