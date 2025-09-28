@@ -38,38 +38,41 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      TAILSCALE_OAUTH_CLIENT: ${{ secrets.TAILSCALE_OAUTH_CLIENT }}
+      TAILSCALE_OAUTH_SECRET: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Check SSH secrets
+      # Install Tailscale CLI
+      - name: Install Tailscale
         run: |
-          if [[ -z "${{ secrets.SSH_PRIVATE_KEY }}" || -z "${{ secrets.SSH_USER }}" || -z "${{ secrets.SSH_HOST }}" ]]; then
-            echo "SSH secrets not set. Skipping deploy."
-            exit 0
-          fi
+          curl -fsSL https://tailscale.com/install.sh | sh
 
-      # Set up SSH agent
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.1
+      # Authenticate runner with Tailscale via OAuth
+      - name: Connect to Tailscale
+        run: |
+          sudo tailscale up --oauth-client=$TAILSCALE_OAUTH_CLIENT \
+                           --oauth-client-secret=$TAILSCALE_OAUTH_SECRET \
+                           --hostname=github-runner
+
+      # Deploy to homelab over Tailscale SSH
+      - name: Connect Tailscale
+        uses: tailscale/github-action@v2
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
 
-      # SSH into server and deploy
       - name: Deploy to server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -o "StrictHostKeyChecking no" ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
             cd ~/homelab
-
-            # Pull latest code
             git fetch --all
             git reset --hard origin/main
-
-            # Optional: stop services before deployment
             ./scripts/stop-services.sh
-
-            # Start services
             ./scripts/start-services.sh
-
-          EOF
+          "
