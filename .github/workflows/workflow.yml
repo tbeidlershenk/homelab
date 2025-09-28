@@ -21,18 +21,19 @@ jobs:
 
       # 3. Build & start containers
       - name: Start services
+        working-directory: ${{ github.workspace }}
         run: |
-          $GITHUB_WORKSPACE/scripts/start-services.sh -e $GITHUB_WORKSPACE/.test.env -r $GITHUB_WORKSPACE/config/registry.json
+          ./scripts/start-services.sh -e .test.env -r config/registry.json
 
       # 4. Healthcheck
       - name: Run Healthcheck
         run: |
-          $GITHUB_WORKSPACE/scripts/healthcheck.sh -e $GITHUB_WORKSPACE/.test.env -r $GITHUB_WORKSPACE/config/registry.json
+          ./scripts/healthcheck.sh -e .test.env -r config/registry.json
 
       # 5. Tear down test containers
       - name: Tear down
         run: |
-          $GITHUB_WORKSPACE/scripts/stop-services.sh -e $GITHUB_WORKSPACE/.test.env -r $GITHUB_WORKSPACE/config/registry.json
+          ./scripts/stop-services.sh -e .test.env -r config/registry.json
 
   deploy:
     needs: test
