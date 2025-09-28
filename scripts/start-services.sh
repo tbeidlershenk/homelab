@@ -16,9 +16,6 @@ while getopts "e:r:" opt; do
   esac
 done
 
-echo "DEBUG: args = $@"
-echo "DEBUG: ENV_FILE=$ENV_FILE"
-
 # Check that .env and registry exist
 [ -f "$ENV_FILE" ] || { echo "ERROR: .env file not found at $ENV_FILE"; exit 1; }
 [ -f "$REGISTRY_FILE" ] || { echo "ERROR: registry file not found at $REGISTRY_FILE"; exit 1; }

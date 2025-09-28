@@ -5,8 +5,6 @@ services:
         user: root:root
         hostname: cronicle
         restart: unless-stopped
-        env_file:
-            - ../.env
         environment:
             - TZ=${TIMEZONE}
             - CRONICLE_smtp_hostname=${SMTP_HOSTNAME}

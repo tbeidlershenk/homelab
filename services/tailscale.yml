@@ -9,8 +9,6 @@ services:
         cap_add:
             - NET_ADMIN
             - NET_RAW
-        env_file:
-            - ../.env
         environment:
             TS_AUTHKEY: "${TAILSCALE_AUTHKEY}"
             TS_DNS: "${TAILSCALE_DNS}"
