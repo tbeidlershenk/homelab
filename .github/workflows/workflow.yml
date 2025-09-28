@@ -22,28 +22,22 @@ jobs:
       # 3. Build & start containers
       - name: Start services
         run: |
-          ./services/start-services.sh .test.env
+          ./scripts/start-services.sh .test.env
 
-      # 4. Smoke tests
-      - name: Smoke tests
+      # 4. Healthcheck
+      - name: Run Healthcheck
         run: |
-          # Check containers are running
-          docker ps --filter "name=myapp" --format "{{.Names}}" | grep myapp
-          docker ps --filter "name=other_service" --format "{{.Names}}" | grep other_service
-
-          # Minimal endpoint checks
-          curl -f http://localhost:8080/health
-          curl -f http://localhost:9090/health
+          ./scripts/healthcheck.sh .test.env
 
       # 5. Tear down test containers
       - name: Tear down
         run: |
-          docker compose -f services/app.yml down -v
-          docker compose -f services/other.yml down -v
+          ./scripts/stop-services.sh .test.env
 
   deploy:
-    needs: test-deploy
+    needs: test
     runs-on: ubuntu-latest
+    if: ${{ secrets.SSH_PRIVATE_KEY && secrets.SSH_USER && secrets.SSH_HOST }}
 
     steps:
       - name: Checkout code
@@ -59,21 +53,16 @@ jobs:
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            cd ~/my-docker-repo
+            cd ~/homelab
 
             # Pull latest code
             git fetch --all
             git reset --hard origin/main
 
             # Optional: stop services before deployment
-            docker compose -f services/app.yml down -v
-            docker compose -f services/other.yml down -v
-
-            # Pull new images (for public images)
-            docker compose -f services/app.yml pull
-            docker compose -f services/other.yml pull
+            ./scripts/stop-services.sh
 
             # Start services
-            docker compose -f services/app.yml up -d
-            docker compose -f services/other.yml up -d
+            ./scripts/start-services.sh
+
           EOF

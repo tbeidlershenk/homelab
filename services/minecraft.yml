@@ -2,7 +2,6 @@ services:
     minecraft-server:
         image: itzg/minecraft-server
         container_name: minecraft-server
-        profiles: ["disabled"]
         user: root:root
         restart: unless-stopped
         tty: true
@@ -15,8 +14,7 @@ services:
         volumes:
             - ${HOME}/homelab/volumes/minecraft/data:/data
         healthcheck:
-            test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/25565"]
-            interval: 30s
+            test: ["CMD-SHELL", "nc -z localhost 25565 || exit 1"]  
+            interval: 15s
             timeout: 5s
             retries: 5
-            start_period: 30s

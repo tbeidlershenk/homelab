@@ -2,7 +2,6 @@ services:
     cronicle:
         image: bluet/cronicle-docker:latest
         container_name: cronicle
-        profiles: ["enabled"]
         user: root:root
         hostname: cronicle
         restart: unless-stopped
@@ -23,5 +22,7 @@ services:
             - ${HOME}/homelab/volumes/cronicle/logs:/opt/cronicle/logs
             - ${HOME}/homelab/volumes/cronicle/plugins:/opt/cronicle/plugins
         healthcheck:
-            disable: false
-
+            test: ["CMD-SHELL", "curl -f http://localhost:3012/ || exit 1"]
+            interval: 15s
+            timeout: 5s
+            retries: 5

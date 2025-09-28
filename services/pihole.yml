@@ -3,7 +3,6 @@ services:
     pihole:
         container_name: pihole
         image: pihole/pihole:latest
-        profiles: ["disabled"]
         user: root:root
         ports:
             # DNS Ports
@@ -40,5 +39,8 @@ services:
             # Optional, if Pi-hole should get some more processing time
             - SYS_NICE
         restart: unless-stopped
-        healthcheck: 
-            disable: false
+        healthcheck:
+            test: ["CMD-SHELL", "curl -f http://localhost/admin/api.php || exit 1"]
+            interval: 15s
+            timeout: 5s
+            retries: 5

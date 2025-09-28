@@ -6,11 +6,14 @@ HOMELAB_DIR="$HOME/homelab"
 SCRIPTS_DIR="$HOMELAB_DIR/scripts"
 VOLUMES_DIR="$HOMELAB_DIR/volumes"
 LOGS_DIR="$HOMELAB_DIR/logs"
-REGISTRY_FILE="$HOMELAB_DIR/services/registry.yml"
+REGISTRY_FILE="$HOMELAB_DIR/config/registry.json"
 
 # First argument: backup drive, default /mnt/backup
 BACKUP_DRIVE="${1:-/mnt/backup}"
 BACKUP_DIR="$BACKUP_DRIVE/volumes"
+
+# Second argument: env file name, default .env
+ENV_FILE="$HOMELAB_DIR/${2:-.env}"
 
 [ -d "$BACKUP_DRIVE" ] || { echo "ERROR: Backup drive not found at $BACKUP_DRIVE"; exit 1; }
 
@@ -21,8 +24,8 @@ echo "Pausing services for backup..."
 while IFS= read -r yml_file; do
   project_name=$(basename "$yml_file" .yml)
   echo "Pausing $project_name..."
-  docker compose -f "$yml_file" -p "$project_name" pause || true
-done < <(yq eval '.services[] | select(.enabled == true and .pause_on_backup == true) | .path' "$REGISTRY_FILE")
+  docker compose --env-file $ENV_FILE -f "$yml_file" -p "$project_name" pause || true
+done < <(jq -r '.services[] | select(.enabled==true and .pause_on_backup==true) | .path' "$REGISTRY_FILE")
 
 # Log backup time
 echo "$TIMESTAMP - ran backup" >> "$LOGS_DIR/backup.log"
@@ -38,9 +41,8 @@ echo "Resuming paused services..."
 while IFS= read -r yml_file; do
   project_name=$(basename "$yml_file" .yml)
   echo "Resuming $project_name..."
-  docker compose -f "$yml_file" -p "$project_name" unpause || true
-done < <(yq eval '.services[] | select(.enabled == true and .pause_on_backup == true) | .path' "$REGISTRY_FILE")
-
+  docker compose --env-file $ENV_FILE -f "$yml_file" -p "$project_name" unpause || true
+done < <(jq -r '.services[] | select(.enabled==true and .pause_on_backup==true) | .path' "$REGISTRY_FILE")
 
 echo "Backup completed successfully!"
 echo "Backed up to directory: $BACKUP_DIR"

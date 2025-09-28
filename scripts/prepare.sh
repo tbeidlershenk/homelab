@@ -1,5 +1,6 @@
 #!/bin/bash
 
+REPO="tbeidlershenk/homelab"
 KEY_TITLE="homelab_$(date +%F)"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 if [ -z "$GH_PAT" ]; then
@@ -19,7 +20,7 @@ chmod +x scripts/*
 # Update system & install packages
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y curl git gh
+sudo apt install -y curl git gh yq
 
 # Setup GitHub access
 if [ ! -f $SSH_KEY ]; then
@@ -28,6 +29,12 @@ fi
 echo $GH_PAT | gh auth login --with-token
 gh ssh-key add $SSH_KEY.pub --title "$KEY_TITLE"
 ssh -T git@github.com
+
+# Set SSH secrets
+gh secret set SSH_PRIVATE_KEY -b @"$SSH_KEY" --repo "$REPO"
+gh secret set SSH_USER -b "$USER" --repo "$REPO"
+gh secret set SSH_HOST -b "your.server.com" --repo "$REPO"
+echo "Updated GitHub Actions secrets for repository $REPO."
 
 # Install Docker
 if ! command -v docker &> /dev/null; then

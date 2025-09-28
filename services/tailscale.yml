@@ -2,7 +2,6 @@ services:
     tailscale:
         image: tailscale/tailscale:latest
         container_name: tailscale
-        profiles: ["enabled"]
         user: root:root
         restart: unless-stopped
         network_mode: "host"
@@ -19,4 +18,7 @@ services:
             - ${HOME}/homelab/volumes/tailscale/data:/var/lib/tailscale
             - /dev/net/tun:/dev/net/tun
         healthcheck:
-            disable: false
+            test: ["CMD-SHELL", "tailscale status || exit 1"]
+            interval: 15s
+            timeout: 5s
+            retries: 5

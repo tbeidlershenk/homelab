@@ -1,0 +1,61 @@
+{
+  "services": [
+    {
+      "name": "cronicle",
+      "path": "services/cronicle.yml",
+      "profile": "core",
+      "enabled": true,
+      "healthcheck": true,
+      "pause_on_backup": false
+    },
+    {
+      "name": "tailscale",
+      "path": "services/tailscale.yml",
+      "profile": "core",
+      "enabled": true,
+      "healthcheck": true,
+      "pause_on_backup": false
+    },
+    {
+      "name": "pihole",
+      "path": "services/pihole.yml",
+      "profile": "core",
+      "enabled": false,
+      "healthcheck": true,
+      "pause_on_backup": true
+    },
+    {
+      "name": "portainer",
+      "path": "services/portainer.yml",
+      "profile": "core",
+      "enabled": true,
+      "healthcheck": false,
+      "pause_on_backup": false
+    },
+    {
+      "name": "grafana",
+      "path": "services/grafana.yml",
+      "profile": "monitoring",
+      "enabled": true,
+      "healthcheck": true,
+      "pause_on_backup": true
+    },
+    {
+      "name": "immich",
+      "path": "services/immich.yml",
+      "profile": "apps",
+      "enabled": true,
+      "healthcheck": true,
+      "pause_on_backup": true
+    },
+    {
+      "name": "minecraft",
+      "path": "services/minecraft.yml",
+      "profile": "apps",
+      "enabled": false,
+      "healthcheck": true,
+      "pause_on_backup": true
+    }
+  ]
+}
+

@@ -2,7 +2,6 @@ services:
     grafana:
         image: grafana/grafana:latest
         container_name: grafana
-        profiles: ["enabled"]
         user: root:root
         network_mode: "host"
         ports:
@@ -12,11 +11,15 @@ services:
         volumes:
             - ${HOME}/homelab/volumes/grafana/data:/var/lib/grafana
         depends_on: [prometheus]
+        healthcheck:
+            test: ["CMD", "nc", "-z", "0.0.0.0", "3000"]
+            interval: 15s
+            timeout: 5s
+            retries: 5
 
     prometheus:
         image: prom/prometheus:latest
         container_name: prometheus
-        profiles: ["enabled"]
         user: root:root
         network_mode: "host"
         restart: unless-stopped
@@ -25,13 +28,22 @@ services:
         volumes:
             - ${HOME}/homelab/config/prometheus.config.yml:/etc/prometheus/prometheus.yml:ro
             - ${HOME}/homelab/volumes/prometheus/data:/prometheus
+        healthcheck:
+            test: ["CMD", "nc", "-z", "0.0.0.0", "9090"]
+            interval: 15s
+            timeout: 5s
+            retries: 5
 
     node-exporter:
         image: prom/node-exporter:latest
         container_name: node-exporter
-        profiles: ["enabled"]
         user: root:root
         pid: "host"
         network_mode: "host"
         command: ["--collector.systemd", "--collector.processes"]
         restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "nc", "-z", "0.0.0.0", "9100"]
+            interval: 15s
+            timeout: 5s
+            retries: 5

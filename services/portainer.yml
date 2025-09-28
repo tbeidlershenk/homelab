@@ -2,10 +2,7 @@ services:
     portainer:
         image: portainer/portainer-ce:latest
         container_name: portainer
-        profiles: ["enabled"]
         restart: unless-stopped
-        env_file:
-            - ../.env
         ports:
             - "9000:9000"
             - "9443:9443"
