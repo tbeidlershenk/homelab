@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-echo "DEBUG: args = $@"
-echo "DEBUG: ENV_FILE=$ENV_FILE"
-
 HOMELAB_DIR="$HOME/homelab"
 
 # Defaults
@@ -18,6 +15,9 @@ while getopts "e:r:" opt; do
     *) echo "Usage: $0 [-e env_file] [-r registry_file]"; exit 1 ;;
   esac
 done
+
+echo "DEBUG: args = $@"
+echo "DEBUG: ENV_FILE=$ENV_FILE"
 
 # Check that .env and registry exist
 [ -f "$ENV_FILE" ] || { echo "ERROR: .env file not found at $ENV_FILE"; exit 1; }
