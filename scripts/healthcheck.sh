@@ -12,6 +12,9 @@ set -a; source "$ENV_FILE"; set +a
 [ -z "$HEALTHCHECK_TIMEOUT" ] && HEALTHCHECK_TIMEOUT=300
 [ -z "$HEALTHCHECK_INTERVAL" ] && HEALTHCHECK_INTERVAL=10
 
+# Other variables
+SERVICES_DIR="$BASE_DIR/services"
+
 echo "Checking health of all enabled services with healthchecks..."
 
 # Get all enabled services with healthcheck=true from the registry
@@ -22,7 +25,7 @@ for yml_file in $services; do
     echo "Waiting for containers in stack '$project_name' to become healthy..."
 
     # Get container IDs for this stack
-    containers=$(docker compose --env-file "$ENV_FILE" -f "$yml_file" -p "$project_name" ps -q)
+    containers=$(docker compose --env-file "$ENV_FILE" -f "$SERVICES_DIR/$yml_file" -p "$project_name" ps -q)
     if [ -z "$containers" ]; then
         echo "No containers found for $project_name, skipping."
         continue

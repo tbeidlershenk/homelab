@@ -14,6 +14,7 @@ set -a; source "$ENV_FILE"; set +a
 
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 SCRIPTS_DIR="$BASE_DIR/scripts"
+SERVICES_DIR="$BASE_DIR/services"
 VOLUMES_DIR="$BASE_DIR/volumes"
 LOGS_DIR="$BASE_DIR/logs"
 
@@ -24,7 +25,7 @@ echo "Pausing services for backup..."
 while IFS= read -r yml_file; do
   project_name=$(basename "$yml_file" .yml)
   echo "Pausing $project_name..."
-  docker compose --env-file $ENV_FILE -f "$yml_file" -p "$project_name" pause || true
+  docker compose --env-file $ENV_FILE -f "$SERVICES_DIR/$yml_file" -p "$project_name" pause || true
 done < <(jq -r '.services[] | select(.enabled==true and .pause_on_backup==true) | .path' "$REGISTRY_FILE")
 
 # Log backup time
@@ -41,7 +42,7 @@ echo "Resuming paused services..."
 while IFS= read -r yml_file; do
   project_name=$(basename "$yml_file" .yml)
   echo "Resuming $project_name..."
-  docker compose --env-file $ENV_FILE -f "$yml_file" -p "$project_name" unpause || true
+  docker compose --env-file $ENV_FILE -f "$SERVICES_DIR/$yml_file" -p "$project_name" unpause || true
 done < <(jq -r '.services[] | select(.enabled==true and .pause_on_backup==true) | .path' "$REGISTRY_FILE")
 
 echo "Backup completed successfully!"

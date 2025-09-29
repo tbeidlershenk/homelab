@@ -18,12 +18,14 @@ set -a; source "$ENV_FILE"; set +a
 # Other variables
 KEY_TITLE="homelab_$(date +%F)"
 SSH_KEY="$HOME/.ssh/id_ed25519"
+CRONICLE_SSH_DIR="$BASE_DIR/volumes/cronicle/ssh"
 
 # Ensure in homelab directory (sanity check)
 cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 
 # Set up directories
 mkdir -p $BASE_DIR/logs
+sudo mkdir -p "$CRONICLE_SSH_DIR"
 
 # Ensure execute permissions (sanity check)
 chmod +x $BASE_DIR/scripts/*
@@ -52,6 +54,21 @@ echo "Updated GitHub Actions secrets for repository $REPO."
 git config --global user.email "tbeidlershenk@gmail.com"
 git config --global user.name "Tobias Beidler-Shenk"
 git config --global user.token $GITHUB_PAT
+
+# Generate a dedicated SSH key for Cronicle if it doesn't exist
+CRONICLE_KEY="$CRONICLE_SSH_DIR/id_ed25519"
+if [ ! -f "$CRONICLE_KEY" ]; then
+    sudo ssh-keygen -t ed25519 -f "$CRONICLE_KEY" -N ""
+    sudo chmod 600 "$CRONICLE_KEY"
+    echo "Generated SSH key for Cronicle container:"
+    sudo cat "${CRONICLE_KEY}.pub"
+fi
+
+# Add the public key to the host's authorized_keys (allows container SSH)
+AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
+grep -qxF "$(cat ${CRONICLE_KEY}.pub)" "$AUTHORIZED_KEYS" || \
+    sudo cat "${CRONICLE_KEY}.pub" >> "$AUTHORIZED_KEYS"
+echo "Added Cronicle container public key to host's authorized_keys."
 
 # Install Docker
 if ! command -v docker &> /dev/null; then

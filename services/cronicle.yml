@@ -5,6 +5,7 @@ services:
         user: root:root
         hostname: cronicle
         restart: unless-stopped
+        network_mode: host
         environment:
             - TZ=${TIMEZONE}
             - CRONICLE_smtp_hostname=${SMTP_HOSTNAME}
@@ -19,6 +20,7 @@ services:
             - ${HOME}/homelab/volumes/cronicle/data:/opt/cronicle/data
             - ${HOME}/homelab/volumes/cronicle/logs:/opt/cronicle/logs
             - ${HOME}/homelab/volumes/cronicle/plugins:/opt/cronicle/plugins
+            - ${HOME}/homelab/volumes/cronicle/ssh:/opt/cronicle/ssh
         healthcheck:
             test: ["CMD-SHELL", "curl -f http://localhost:3012/ || exit 1"]
             interval: 15s
