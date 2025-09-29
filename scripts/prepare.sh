@@ -12,6 +12,7 @@ set -a; source "$ENV_FILE"; set +a
 [ -z "$USER" ] && echo "Error: USER is not set in $ENV_FILE" && exit 1
 [ -z "$TAILSCALE_AUTHKEY" ] && echo "Error: TAILSCALE_AUTHKEY is not set in $ENV_FILE" && exit 1
 [ -z "$TAILSCALE_HOSTNAME" ] && echo "Error: TAILSCALE_HOSTNAME is not set in $ENV_FILE" && exit 1
+[ -z "$TAILSCALE_CI_AUTHKEY" ] && echo "Error: TAILSCALE_CI_AUTHKEY is not set in $ENV_FILE" && exit 1
 [ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set in $ENV_FILE" && exit 1
 
 # Other variables
@@ -44,6 +45,7 @@ ssh -T git@github.com
 gh secret set SSH_PRIVATE_KEY -b @"$SSH_KEY" --repo "$REPO"
 gh secret set SSH_USER -b "$USER" --repo "$REPO"
 gh secret set SSH_HOST -b "homelab" --repo "$REPO"
+gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
 echo "Updated GitHub Actions secrets for repository $REPO."
 
 # Set Git config
