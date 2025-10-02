@@ -24,7 +24,7 @@ for yml_file in $services; do
     echo "Waiting for containers in stack '$project_name' to become healthy..."
 
     # Get container IDs for this stack
-    containers=$(docker compose --env-file "$ENV_FILE" -f "$SERVICES_DIR/$yml_file" -p "$project_name" ps -q)
+    containers=$(docker compose -f "$SERVICES_DIR/$yml_file" -p "$project_name" ps -q)
     if [ -z "$containers" ]; then
         echo "No containers found for $project_name, skipping."
         continue
