@@ -19,8 +19,8 @@ echo "Environment: $DOPPLER_CONFIG"
 echo "Downloading secrets from PROJECT: $DOPPLER_PROJECT, CONFIG: $DOPPLER_CONFIG..."
 eval "$(doppler secrets download \
     --token "$DOPPLER_TOKEN" \
-    --project homelab \
-    --config dev \
+    --project $DOPPLER_PROJECT \
+    --config $DOPPLER_CONFIG \
     --no-file \
     --format env \
     | sed 's/^/export /')"
