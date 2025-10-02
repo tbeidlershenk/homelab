@@ -22,18 +22,30 @@ jobs:
             # 3. Build & start containers
             - name: Start services
               working-directory: ${{ github.workspace }}
+              env:
+                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
                   ./scripts/start-services.sh
 
             # 4. Healthcheck
             - name: Run Healthcheck
               working-directory: ${{ github.workspace }}
+              env:
+                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
                   ./scripts/healthcheck.sh
 
             # 5. Tear down test containers
             - name: Tear down
               working-directory: ${{ github.workspace }}
+              env:
+                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
                   ./scripts/stop-services.sh
 
