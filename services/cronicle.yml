@@ -17,10 +17,10 @@ services:
             - "3012:3012"
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - ${HOME}/homelab/volumes/cronicle/data:/opt/cronicle/data
-            - ${HOME}/homelab/volumes/cronicle/logs:/opt/cronicle/logs
-            - ${HOME}/homelab/volumes/cronicle/plugins:/opt/cronicle/plugins
-            - ${HOME}/homelab/volumes/cronicle/ssh:/opt/cronicle/ssh
+            - ${BASE_DIR}/volumes/cronicle/data:/opt/cronicle/data
+            - ${BASE_DIR}/volumes/cronicle/logs:/opt/cronicle/logs
+            - ${BASE_DIR}/volumes/cronicle/plugins:/opt/cronicle/plugins
+            - ${BASE_DIR}/volumes/cronicle/ssh:/opt/cronicle/ssh
         healthcheck:
             test: ["CMD-SHELL", "curl -f http://localhost:3012/ || exit 1"]
             interval: 15s

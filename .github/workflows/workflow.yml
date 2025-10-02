@@ -1,63 +1,63 @@
 name: Homelab CI/CD
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:  # optional manual trigger
+    push:
+        branches:
+            - main
+    workflow_dispatch: # optional manual trigger
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+    test:
+        runs-on: ubuntu-latest
 
-    steps:
-      # 1. Checkout repo
-      - name: Checkout code
-        uses: actions/checkout@v3
+        steps:
+            # 1. Checkout repo
+            - name: Checkout code
+              uses: actions/checkout@v3
 
-      # 2. Set up Docker
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
+            # 2. Set up Docker
+            - name: Set up Docker
+              uses: docker/setup-buildx-action@v2
 
-      # 3. Build & start containers
-      - name: Start services
-        working-directory: ${{ github.workspace }}
-        run: |
-          ./scripts/start-services.sh .test.env
+            # 3. Build & start containers
+            - name: Start services
+              working-directory: ${{ github.workspace }}
+              run: |
+                  ./scripts/start-services.sh
 
-      # 4. Healthcheck
-      - name: Run Healthcheck
-        working-directory: ${{ github.workspace }}
-        run: |
-          ./scripts/healthcheck.sh .test.env
+            # 4. Healthcheck
+            - name: Run Healthcheck
+              working-directory: ${{ github.workspace }}
+              run: |
+                  ./scripts/healthcheck.sh
 
-      # 5. Tear down test containers
-      - name: Tear down
-        working-directory: ${{ github.workspace }}
-        run: |
-          ./scripts/stop-services.sh .test.env
+            # 5. Tear down test containers
+            - name: Tear down
+              working-directory: ${{ github.workspace }}
+              run: |
+                  ./scripts/stop-services.sh
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
+    deploy:
+        needs: test
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-          
-      # Deploy to homelab over Tailscale SSH
-      - name: Connect Tailscale
-        uses: tailscale/github-action@v3
-        with:
-          authkey: ${{ secrets.TAILSCALE_CI_AUTHKEY }}
-          statedir: /tmp/tailscale-state/
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
 
-      - name: Deploy to server
-        run: |
-          ssh -o "StrictHostKeyChecking no" ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd ~/homelab
-            git fetch --all
-            git reset --hard origin/main
-            ./scripts/stop-services.sh
-            ./scripts/start-services.sh
-          "
+            # Deploy to homelab over Tailscale SSH
+            - name: Connect Tailscale
+              uses: tailscale/github-action@v3
+              with:
+                  authkey: ${{ secrets.TAILSCALE_CI_AUTHKEY }}
+                  statedir: /tmp/tailscale-state/
+
+            - name: Deploy to server
+              run: |
+                  ssh -o "StrictHostKeyChecking no" ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+                    cd ~/homelab
+                    git fetch --all
+                    git reset --hard origin/main
+                    ./scripts/stop-services.sh
+                    ./scripts/start-services.sh
+                  "

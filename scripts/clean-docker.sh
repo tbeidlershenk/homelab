@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
+# This script cleans up Docker resources, optionally purging volumes
 set -e
 
 # Source environment variables
-ENV_FILE=${1:-.env}
-[ ! -f "$ENV_FILE" ] && echo "Error: Environment file not found: $ENV_FILE" && exit 1 
-set -a; source "$ENV_FILE"; set +a
+source "$(dirname "${BASH_SOURCE[0]}")/doppler-get.sh"
 
 # Verify required environment variables are set
-[ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set in $ENV_FILE" && exit 1
+[ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not configured." && exit 1
 
 read -p "WARNING: This will permanently remove all Docker volumes. Proceed? (confirm YES): " confirm_vol
 if [[ "$confirm_vol" != "YES" ]]; then

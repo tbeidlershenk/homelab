@@ -12,9 +12,9 @@ services:
             EULA: ${MINECRAFT_EULA}
             MEMORY: ${MINECRAFT_MEMORY}
         volumes:
-            - ${HOME}/homelab/volumes/minecraft/data:/data
+            - ${BASE_DIR}/volumes/minecraft/data:/data
         healthcheck:
-            test: ["CMD-SHELL", "nc -z localhost 25565 || exit 1"]  
+            test: ["CMD-SHELL", "nc -z localhost 25565 || exit 1"]
             interval: 15s
             timeout: 5s
             retries: 5

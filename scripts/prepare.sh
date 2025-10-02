@@ -1,9 +1,9 @@
 #!/bin/bash
+# Prepares an environment (dev/stage/prod) for usage
+set -e
 
 # Source environment variables
-ENV_FILE=${1:-.env}
-[ ! -f "$ENV_FILE" ] && echo "Error: Environment file not found: $ENV_FILE" && exit 1 
-set -a; source "$ENV_FILE"; set +a
+source "$(dirname "${BASH_SOURCE[0]}")/doppler-get.sh"
 
 # Verify required environment variables are set
 [ -z "$GITHUB_PAT" ] && echo "Error: GITHUB_PAT is not set in $ENV_FILE" && exit 1 
