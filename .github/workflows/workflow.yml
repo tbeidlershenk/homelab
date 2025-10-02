@@ -24,7 +24,7 @@ jobs:
               working-directory: ${{ github.workspace }}
               env:
                   DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
-                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_CONFIG: stage
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
                   ./scripts/start-services.sh
@@ -33,7 +33,7 @@ jobs:
               working-directory: ${{ github.workspace }}
               env:
                   DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
-                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_CONFIG: stage
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
                   ./scripts/healthcheck.sh
@@ -42,7 +42,7 @@ jobs:
               working-directory: ${{ github.workspace }}
               env:
                   DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
-                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_CONFIG: stage
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
                   ./scripts/stop-services.sh
