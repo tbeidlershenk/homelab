@@ -5,7 +5,6 @@ ENV_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.env"
 
 # If we have a .env file we are in development environment
 if [ -f $ENV_FILE ]; then
-    echo "Detected .env file, launching in dev mode."
     set -a; source $ENV_FILE; set +a
 fi
 
