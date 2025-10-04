@@ -1,9 +1,18 @@
 #!/bin/bash
 # Prepares an environment (dev/stage/prod) for usage
-set -e
+
+log() {
+    local GREEN='\033[1;32m'
+    local RESET='\033[0m'
+    echo -e "${GREEN}$*${RESET}"
+}
+
+# Install Doppler
+curl -Ls https://cli.doppler.com/install.sh | sudo sh
 
 # Source environment variables
 source "$(dirname "${BASH_SOURCE[0]}")/doppler-get.sh"
+log "Loaded Doppler environment variables." 
 
 # Verify required environment variables are set
 [ -z "$GITHUB_PAT" ] && echo "Error: GITHUB_PAT is not set in $ENV_FILE" && exit 1 
@@ -26,14 +35,17 @@ cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 # Set up directories
 mkdir -p $BASE_DIR/logs
 sudo mkdir -p "$CRONICLE_SSH_DIR"
+log "Created necessary directories." 
 
-# Ensure execute permissions (sanity check)
+# Ensure execute permissions
 chmod +x $BASE_DIR/scripts/*
+log "Set execute permissions on scripts/*." 
 
 # Update system & install packages
 sudo apt update
 sudo apt upgrade -y
 sudo apt install -y curl git gh yq
+log "Installed apt packages." 
 
 # Setup GitHub access
 if [ ! -f $SSH_KEY ]; then
@@ -41,19 +53,21 @@ if [ ! -f $SSH_KEY ]; then
 fi
 echo $GITHUB_PAT | gh auth login --with-token
 gh ssh-key add $SSH_KEY.pub --title "$KEY_TITLE"
-ssh -T git@github.com
+ssh -T git@github.com 
+log "GitHub SSH key setup complete." 
 
 # Set SSH secrets
 gh secret set SSH_PRIVATE_KEY -b @"$SSH_KEY" --repo "$REPO"
 gh secret set SSH_USER -b "$USER" --repo "$REPO"
 gh secret set SSH_HOST -b "homelab" --repo "$REPO"
 gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
-echo "Updated GitHub Actions secrets for repository $REPO."
+log "Updated GitHub secrets for repository $REPO." 
 
 # Set Git config
 git config --global user.email "tbeidlershenk@gmail.com"
 git config --global user.name "Tobias Beidler-Shenk"
 git config --global user.token $GITHUB_PAT
+log "Set global Git config." 
 
 # Generate a dedicated SSH key for Cronicle if it doesn't exist
 CRONICLE_KEY="$CRONICLE_SSH_DIR/id_ed25519"
@@ -69,6 +83,7 @@ AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
 grep -qxF "$(cat ${CRONICLE_KEY}.pub)" "$AUTHORIZED_KEYS" || \
     sudo cat "${CRONICLE_KEY}.pub" >> "$AUTHORIZED_KEYS"
 echo "Added Cronicle container public key to host's authorized_keys."
+log "Container SSH access complete." 
 
 # Install Docker
 if ! command -v docker &> /dev/null; then
@@ -77,23 +92,23 @@ if ! command -v docker &> /dev/null; then
     sudo sh get-docker.sh
     rm get-docker.sh
     sudo usermod -aG docker $USER
-    echo "Docker installed. You may need to re-login."
-else
-    echo "Docker is installed."
+    echo "You may need to re-login."
 fi
+log "Docker installation complete." 
 
 # Start Docker service
 if ! systemctl is-active --quiet docker; then
     echo "Docker service is not running. Starting Docker..."
     sudo systemctl enable docker
     sudo systemctl start docker
-else
-    echo "Docker service is running."
 fi
+log "Docker daemon running." 
 
 # Install Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up --ssh --authkey "$TAILSCALE_AUTHKEY" --hostname "$TAILSCALE_HOSTNAME" --accept-routes
+log "Tailscale installation complete." 
 
 # Enable Tailscale service
 sudo systemctl enable --now tailscaled
+log "Tailscale daemon running." 
