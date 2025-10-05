@@ -14,7 +14,7 @@ SERVICES_DIR="$BASE_DIR/services"
 
 # Stop services enabled in registry file
 echo "Stopping all enabled services..."
-for yml_file in $(jq -r '.services[] | .path' "$REGISTRY_FILE"); do
+for yml_file in $(jq -r '.services[] | .path' "$BASE_DIR/$REGISTRY_FILE"); do
   project_name=$(basename "$yml_file" .yml)
   echo "Stopping stack: $yml_file (project: $project_name)"
   docker compose -f "$SERVICES_DIR/$yml_file" -p "$project_name" down --remove-orphans || true

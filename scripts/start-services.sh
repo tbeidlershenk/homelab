@@ -14,7 +14,7 @@ SERVICES_DIR="$BASE_DIR/services"
 
 # Start services enabled in registry file
 echo "Starting all enabled services..."
-for yml_file in $(jq -r '.services[] | select(.enabled==true) | .path' "$REGISTRY_FILE"); do
+for yml_file in $(jq -r '.services[] | select(.enabled==true) | .path' "$BASE_DIR/$REGISTRY_FILE"); do
   project_name=$(basename "$yml_file" .yml)
   echo "Starting stack: $yml_file (project: $project_name)"
   docker compose -f "$SERVICES_DIR/$yml_file" -p "$project_name" up -d || true

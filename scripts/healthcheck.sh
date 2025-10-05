@@ -17,7 +17,7 @@ SERVICES_DIR="$BASE_DIR/services"
 echo "Checking health of all enabled services with healthchecks..."
 
 # Get all enabled services with healthcheck=true from the registry
-services=$(jq -r '.services[] | select(.enabled==true and .healthcheck==true) | .path' "$REGISTRY_FILE")
+services=$(jq -r '.services[] | select(.enabled==true and .healthcheck==true) | .path' "$BASE_DIR/$REGISTRY_FILE")
 
 for yml_file in $services; do
     project_name=$(basename "$yml_file" .yml)

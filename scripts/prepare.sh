@@ -28,12 +28,16 @@ log "Loaded Doppler environment variables."
 KEY_TITLE="homelab_$(date +%F)"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 CRONICLE_SSH_DIR="$BASE_DIR/volumes/cronicle/ssh"
+TAILSCALE_STATE_DIR="$BASE_DIR/volumes/tailscale"
 
 # Ensure in homelab directory (sanity check)
 cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 
 # Set up directories
 mkdir -p $BASE_DIR/logs
+mkdir -p $BASE_DIR/backup
+mkdir -p $BASE_DIR/volumes
+sudo mkdir -p $TAILSCALE_STATE_DIR
 sudo mkdir -p "$CRONICLE_SSH_DIR"
 log "Created necessary directories." 
 
@@ -46,6 +50,9 @@ sudo apt update
 sudo apt upgrade -y
 sudo apt install -y curl git gh yq
 log "Installed apt packages." 
+
+curl -sL https://filen.io/cli.sh | sudo bash
+log "Installed Filen CLI."
 
 # Setup GitHub access
 if [ ! -f $SSH_KEY ]; then
@@ -106,9 +113,18 @@ log "Docker daemon running."
 
 # Install Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up --ssh --authkey "$TAILSCALE_AUTHKEY" --hostname "$TAILSCALE_HOSTNAME" --accept-routes
 log "Tailscale installation complete." 
 
 # Enable Tailscale service
+sudo mkdir -p /etc/systemd/system/tailscaled.service.d
+sudo tee /etc/systemd/system/tailscaled.service.d/override.conf > /dev/null <<EOF
+[Service]
+ExecStart=
+ExecStart=/usr/sbin/tailscaled --statedir=$TAILSCALE_STATE_DIR
+EOF
+log "Configured Tailscale systemd service."
+
+sudo tailscale up --ssh --authkey "$TAILSCALE_AUTHKEY" --hostname "$TAILSCALE_HOSTNAME" --accept-routes
 sudo systemctl enable --now tailscaled
+sudo systemctl restart tailscaled
 log "Tailscale daemon running." 
