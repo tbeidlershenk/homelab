@@ -68,7 +68,6 @@ jobs:
                     cd ~/homelab
                     git fetch --all
                     git reset --hard origin/main
-                    ./scripts/prepare.sh
                     ./scripts/stop-services.sh
                     ./scripts/start-services.sh
                   "
