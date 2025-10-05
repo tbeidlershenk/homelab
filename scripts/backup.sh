@@ -39,7 +39,7 @@ sudo rsync -av "$VOLUMES_DIR/" "$BACKUP_DIR"
 for yml_file in $(jq -r '.services[] | select(.cloud_backup==true) | .path' "$BASE_DIR/$REGISTRY_FILE"); do
     project_name=$(basename "$yml_file" .yml)
     echo "Backing up $project_name to Filen..."
-    filen mkdir /$project_name \
+    sudo -E env "PATH=$PATH" filen mkdir /$project_name \
         --email "$FILEN_EMAIL" \
         --password "$FILEN_PASSWORD"
     sudo -E env "PATH=$PATH" filen sync $VOLUMES_DIR/$project_name:localToCloud:/$project_name \
