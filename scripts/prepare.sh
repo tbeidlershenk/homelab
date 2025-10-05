@@ -19,6 +19,7 @@ log "Loaded Doppler environment variables."
 [ -z "$REPO" ] && echo "Error: REPO is not set in $ENV_FILE" && exit 1 
 [ -z "$EMAIL" ] && echo "Error: EMAIL is not set in $ENV_FILE" && exit 1 
 [ -z "$USER" ] && echo "Error: USER is not set in $ENV_FILE" && exit 1
+[ -z "$ENVIRONMENT" ] && echo "Error: ENVIRONMENT is not set in $ENV_FILE" && exit 1
 [ -z "$TAILSCALE_AUTHKEY" ] && echo "Error: TAILSCALE_AUTHKEY is not set in $ENV_FILE" && exit 1
 [ -z "$TAILSCALE_HOSTNAME" ] && echo "Error: TAILSCALE_HOSTNAME is not set in $ENV_FILE" && exit 1
 [ -z "$TAILSCALE_CI_AUTHKEY" ] && echo "Error: TAILSCALE_CI_AUTHKEY is not set in $ENV_FILE" && exit 1
@@ -124,7 +125,12 @@ ExecStart=/usr/sbin/tailscaled --statedir=$TAILSCALE_STATE_DIR
 EOF
 log "Configured Tailscale systemd service."
 
-sudo tailscale up --ssh --authkey "$TAILSCALE_AUTHKEY" --hostname "$TAILSCALE_HOSTNAME" --accept-routes
+sudo tailscale up \
+    --authkey "$TAILSCALE_AUTHKEY" \
+    --ssh \
+    --hostname "$TAILSCALE_HOSTNAME" \
+    --accept-routes \
+    --advertise-tags=tag:$ENVIRONMENT
 sudo systemctl enable --now tailscaled
 sudo systemctl restart tailscaled
 log "Tailscale daemon running." 
