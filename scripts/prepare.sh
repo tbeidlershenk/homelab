@@ -26,9 +26,10 @@ fi
 cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 
 # Set up directories
-mkdir -p $BASE_DIR/logs
-mkdir -p $BASE_DIR/backup
-mkdir -p $BASE_DIR/volumes
+mkdir -p $LOGS_DIR
+mkdir -p $BACKUP_DIR
+mkdir -p $DATA_DIR
+mkdir -p $VOLUMES_DIR
 sudo mkdir -p $TAILSCALE_STATE_DIR
 sudo mkdir -p "$CRONICLE_SSH_DIR"
 log "Created necessary directories." 
