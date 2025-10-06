@@ -11,25 +11,16 @@ log() {
 curl -Ls https://cli.doppler.com/install.sh | sudo sh
 
 # Source environment variables
-source "$(dirname "${BASH_SOURCE[0]}")/doppler-get.sh"
+script_context=$(dirname "${BASH_SOURCE[0]}")
+source "$script_context/doppler-get.sh"
 log "Loaded Doppler environment variables." 
 
-# Verify required environment variables are set
-[ -z "$GITHUB_PAT" ] && echo "Error: GITHUB_PAT is not set in $ENV_FILE" && exit 1 
-[ -z "$REPO" ] && echo "Error: REPO is not set in $ENV_FILE" && exit 1 
-[ -z "$EMAIL" ] && echo "Error: EMAIL is not set in $ENV_FILE" && exit 1 
-[ -z "$USER" ] && echo "Error: USER is not set in $ENV_FILE" && exit 1
-[ -z "$ENVIRONMENT" ] && echo "Error: ENVIRONMENT is not set in $ENV_FILE" && exit 1
-[ -z "$TAILSCALE_AUTHKEY" ] && echo "Error: TAILSCALE_AUTHKEY is not set in $ENV_FILE" && exit 1
-[ -z "$TAILSCALE_HOSTNAME" ] && echo "Error: TAILSCALE_HOSTNAME is not set in $ENV_FILE" && exit 1
-[ -z "$TAILSCALE_CI_AUTHKEY" ] && echo "Error: TAILSCALE_CI_AUTHKEY is not set in $ENV_FILE" && exit 1
-[ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set in $ENV_FILE" && exit 1
-
-# Other variables
-KEY_TITLE="homelab_$(date +%F)"
-SSH_KEY="$HOME/.ssh/id_ed25519"
-CRONICLE_SSH_DIR="$BASE_DIR/volumes/cronicle/ssh"
-TAILSCALE_STATE_DIR="$BASE_DIR/volumes/tailscale"
+# Verify paths exist
+[ ! -f "$REGISTRY_PATH" ]; then
+    echo "REGISTRY_FILE not found at $REGISTRY_PATH. Creating from default."
+    sudo cp "$BASE_DIR/config/default_registry.json" "$REGISTRY_PATH"
+    log "Copied default registry to $REGISTRY_PATH."
+fi
 
 # Ensure in homelab directory (sanity check)
 cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
@@ -56,16 +47,16 @@ curl -sL https://filen.io/cli.sh | sudo bash
 log "Installed Filen CLI."
 
 # Setup GitHub access
-if [ ! -f $SSH_KEY ]; then
-    ssh-keygen -t ed25519 -f $SSH_KEY -N ""
+if [ ! -f $SSH_PRIVATE_KEY ]; then
+    ssh-keygen -t ed25519 -f $SSH_PRIVATE_KEY -N ""
 fi
 echo $GITHUB_PAT | gh auth login --with-token
-gh ssh-key add $SSH_KEY.pub --title "$KEY_TITLE"
+gh ssh-key add $SSH_PRIVATE_KEY.pub --title "$GITHUB_SSH_KEY_TITLE"
 ssh -T git@github.com 
 log "GitHub SSH key setup complete." 
 
 # Set SSH secrets
-gh secret set SSH_PRIVATE_KEY -b @"$SSH_KEY" --repo "$REPO"
+gh secret set SSH_PRIVATE_KEY -b @"$SSH_PRIVATE_KEY" --repo "$REPO"
 gh secret set SSH_USER -b "$USER" --repo "$REPO"
 gh secret set SSH_HOST -b "homelab" --repo "$REPO"
 gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
@@ -78,18 +69,16 @@ git config --global user.token $GITHUB_PAT
 log "Set global Git config." 
 
 # Generate a dedicated SSH key for Cronicle if it doesn't exist
-CRONICLE_KEY="$CRONICLE_SSH_DIR/id_ed25519"
-if [ ! -f "$CRONICLE_KEY" ]; then
-    sudo ssh-keygen -t ed25519 -f "$CRONICLE_KEY" -N ""
-    sudo chmod 600 "$CRONICLE_KEY"
+if [ ! -f "$CRONICLE_SSH_KEY" ]; then
+    sudo ssh-keygen -t ed25519 -f "$CRONICLE_SSH_KEY" -N ""
+    sudo chmod 600 "$CRONICLE_SSH_KEY"
     echo "Generated SSH key for Cronicle container:"
-    sudo cat "${CRONICLE_KEY}.pub"
+    sudo cat "${CRONICLE_SSH_KEY}.pub"
 fi
 
 # Add the public key to the host's authorized_keys (allows container SSH)
-AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
-grep -qxF "$(cat ${CRONICLE_KEY}.pub)" "$AUTHORIZED_KEYS" || \
-    sudo cat "${CRONICLE_KEY}.pub" >> "$AUTHORIZED_KEYS"
+grep -qxF "$(cat ${CRONICLE_SSH_KEY}.pub)" "$AUTHORIZED_KEYS" || \
+    sudo cat "${CRONICLE_SSH_KEY}.pub" >> "$AUTHORIZED_KEYS"
 echo "Added Cronicle container public key to host's authorized_keys."
 log "Container SSH access complete." 
 

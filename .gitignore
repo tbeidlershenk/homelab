@@ -1,6 +1,6 @@
 .env
-.dev.env
 .dev
+data
 volumes
 backup
 logs

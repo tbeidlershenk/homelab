@@ -12,7 +12,7 @@ services:
             EULA: ${MINECRAFT_EULA}
             MEMORY: ${MINECRAFT_MEMORY}
         volumes:
-            - ${BASE_DIR}/volumes/minecraft/data:/data
+            - ${VOLUMES_DIR}/minecraft/data:/data
         healthcheck:
             test: ["CMD-SHELL", "nc -z localhost 25565 || exit 1"]
             interval: 15s

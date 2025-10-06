@@ -1,32 +1,21 @@
 #!/usr/bin/env bash
 # Checks health status of services with the "healthcheck" flag
 set -e
-
-# Source environment variables
-source "$(dirname "${BASH_SOURCE[0]}")/doppler-get.sh"
-
-# Verify required environment variables are set
-[ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set in $ENV_FILE" && exit 1
-[ -z "$REGISTRY_FILE" ] && echo "Error: REGISTRY_FILE is not set in $ENV_FILE" && exit 1
-[ -z "$HEALTHCHECK_TIMEOUT" ] && HEALTHCHECK_TIMEOUT=300
-[ -z "$HEALTHCHECK_INTERVAL" ] && HEALTHCHECK_INTERVAL=10
-
-# Other variables
-SERVICES_DIR="$BASE_DIR/services"
+script_context=$(dirname "${BASH_SOURCE[0]}")
+source "$script_context/doppler-get.sh"
 
 echo "Checking health of all enabled services with healthchecks..."
 
 # Get all enabled services with healthcheck=true from the registry
-services=$(jq -r '.services[] | select(.enabled==true and .healthcheck==true) | .path' "$BASE_DIR/$REGISTRY_FILE")
+services=$(jq -r '.[] | select(.enabled==true and .healthcheck==true) | .name' "$REGISTRY_PATH")
 
-for yml_file in $services; do
-    project_name=$(basename "$yml_file" .yml)
-    echo "Waiting for containers in stack '$project_name' to become healthy..."
+for name in $services; do
+    echo "Waiting for containers in stack '$name' to become healthy..."
 
     # Get container IDs for this stack
-    containers=$(docker compose -f "$SERVICES_DIR/$yml_file" -p "$project_name" ps -q)
+    containers=$(docker compose -f "$SERVICES_DIR/$name.yml" -p "$name" ps -q)
     if [ -z "$containers" ]; then
-        echo "No containers found for $project_name, skipping."
+        echo "No containers found for $name, skipping."
         continue
     fi
 
@@ -41,12 +30,12 @@ for yml_file in $services; do
         done
 
         if [ -z "$unhealthy" ]; then
-            echo "All containers in '$project_name' are healthy."
+            echo "All containers in '$name' are healthy."
             break
         fi
 
         if [ "$elapsed" -ge "$HEALTHCHECK_TIMEOUT" ]; then
-            echo "ERROR: The following containers in '$project_name' are still unhealthy after $HEALTHCHECK_TIMEOUT seconds:"
+            echo "ERROR: The following containers in '$name' are still unhealthy after $HEALTHCHECK_TIMEOUT seconds:"
             echo "$unhealthy"
             exit 1
         fi

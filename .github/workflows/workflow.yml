@@ -27,7 +27,7 @@ jobs:
                   DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
-                  ./scripts/start-services.sh
+                  ./scripts/start.sh
 
             - name: Run Healthcheck
               working-directory: ${{ github.workspace }}
@@ -45,7 +45,7 @@ jobs:
                   DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
-                  ./scripts/stop-services.sh
+                  ./scripts/stop.sh
 
     deploy:
         needs: test
@@ -68,6 +68,5 @@ jobs:
                     cd ~/homelab
                     git fetch --all
                     git reset --hard origin/main
-                    ./scripts/stop-services.sh
-                    ./scripts/start-services.sh
+                    ./scripts/restart.sh
                   "

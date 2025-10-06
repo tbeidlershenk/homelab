@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 # This script cleans up Docker resources, optionally purging volumes
 set -e
-
-# Source environment variables
-source "$(dirname "${BASH_SOURCE[0]}")/doppler-get.sh"
-
-# Verify required environment variables are set
-[ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not configured." && exit 1
+script_context=$(dirname "${BASH_SOURCE[0]}")
+source "$script_context/doppler-get.sh"
 
 read -p "WARNING: This will permanently remove all Docker volumes. Proceed? (confirm YES): " confirm_vol
 if [[ "$confirm_vol" != "YES" ]]; then
@@ -14,7 +10,7 @@ if [[ "$confirm_vol" != "YES" ]]; then
 fi
 
 echo "Stopping stacks for cleanup..."
-bash "$BASE_DIR/scripts/stop-services.sh"
+source "$script_context/helpers/stop_all.sh"
 
 echo "Removing all containers..."
 docker ps -a -q | xargs -r docker rm

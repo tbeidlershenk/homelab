@@ -1,0 +1,50 @@
+[
+    {
+        "name": "cronicle",
+        "profile": "core",
+        "enabled": true,
+        "healthcheck": true,
+        "pause_on_backup": false,
+        "cloud_backup": true
+    },
+    {
+        "name": "pihole",
+        "profile": "core",
+        "enabled": false,
+        "healthcheck": true,
+        "pause_on_backup": true,
+        "cloud_backup": false
+    },
+    {
+        "name": "portainer",
+        "profile": "core",
+        "enabled": true,
+        "healthcheck": false,
+        "pause_on_backup": false,
+        "cloud_backup": true
+    },
+    {
+        "name": "grafana",
+        "profile": "monitoring",
+        "enabled": true,
+        "healthcheck": true,
+        "pause_on_backup": true,
+        "cloud_backup": true
+    },
+    {
+        "name": "immich",
+        "profile": "apps",
+        "enabled": true,
+        "healthcheck": true,
+        "pause_on_backup": true,
+        "cloud_backup": false
+    },
+    {
+        "name": "minecraft",
+        "profile": "apps",
+        "enabled": false,
+        "healthcheck": true,
+        "pause_on_backup": true,
+        "cloud_backup": false
+    }
+]
