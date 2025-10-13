@@ -3,7 +3,6 @@
 set -e
 script_context=$(dirname "${BASH_SOURCE[0]}")
 source "$script_context/doppler-get.sh"
-
 echo "Backing up Docker volumes to: $BACKUP_DIR"
 
 # Pause services marked pause_on_backup: true
@@ -16,7 +15,7 @@ echo "$TIMESTAMP - ran backup" >> "$LOGS_DIR/backup.log"
 # Ensure backup directory exists
 sudo mkdir -p "$DATA_DIR"
 
-# Run rsync backup
+# Run backup
 sudo rsync -av "$DATA_DIR/" "$BACKUP_DIR"
 
 # Unpause services after backup

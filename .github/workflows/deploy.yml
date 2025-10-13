@@ -1,10 +1,9 @@
-name: Homelab CI/CD
+name: Deploy
 
 on:
     push:
         branches:
             - main
-    workflow_dispatch: # optional manual trigger
 
 jobs:
     test:
@@ -37,6 +36,24 @@ jobs:
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
                   ./scripts/healthcheck.sh
+
+            - name: Run Backup
+              working-directory: ${{ github.workspace }}
+              env:
+                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+              run: |
+                  ./scripts/backup.sh
+
+            - name: Run Restore
+              working-directory: ${{ github.workspace }}
+              env:
+                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+              run: |
+                  ./scripts/restore.sh
 
             - name: Tear down
               working-directory: ${{ github.workspace }}

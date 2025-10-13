@@ -11,7 +11,5 @@ source "$script_context/helpers/stop_all.sh"
 echo "Starting all enabled services..."
 source "$script_context/helpers/start_enabled.sh"
 
-
-
 echo "All enabled services started."
 
