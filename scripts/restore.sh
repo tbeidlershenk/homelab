@@ -11,12 +11,17 @@ if [[ "$confirm_restore" != "YES" ]]; then
     echo "Restore aborted." && exit 0
 fi
 
+if [ ! -d "$BACKUP_DIR" ]; then
+    echo "Backup directory $BACKUP_DIR does not exist. Aborting." && exit 1
+fi
+
 # Pause services marked pause_on_backup: true
 echo "Stopping services for restore..."
 source "$script_context/helpers/stop_all.sh"
 sudo systemctl stop tailscaled
 
 # Restore volumes
+sudo mkdir -p "$LOGS_DIR"
 echo "$TIMESTAMP - ran restore" >> "$LOGS_DIR/backup.log"
 sudo rsync -av "$BACKUP_DIR/" "$DATA_DIR"
 

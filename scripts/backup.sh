@@ -10,12 +10,9 @@ echo "Pausing services for backup..."
 source "$script_context/helpers/pause_for_backup.sh"
 
 # Log backup time
-echo "$TIMESTAMP - ran backup" >> "$LOGS_DIR/backup.log"
-
-# Ensure backup directory exists
+sudo mkdir -p "$LOGS_DIR"
 sudo mkdir -p "$DATA_DIR"
-
-# Run backup
+echo "$TIMESTAMP - ran backup" >> "$LOGS_DIR/backup.log"
 sudo rsync -av "$DATA_DIR/" "$BACKUP_DIR"
 
 # Unpause services after backup

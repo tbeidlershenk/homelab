@@ -53,7 +53,7 @@ jobs:
                   DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
-                  ./scripts/restore.sh
+                  ./scripts/restore.sh <<< "YES"
 
             - name: Tear down
               working-directory: ${{ github.workspace }}
