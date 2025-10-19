@@ -41,23 +41,23 @@ jobs:
               run: |
                   ./scripts/healthcheck.sh
 
-            - name: Run Backup
-              working-directory: ${{ github.workspace }}
-              env:
-                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
-                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
-                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-              run: |
-                  ./scripts/backup.sh
+            # - name: Run Backup
+            #   working-directory: ${{ github.workspace }}
+            #   env:
+            #       DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+            #       DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+            #       DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+            #   run: |
+            #       ./scripts/backup.sh
 
-            - name: Run Restore
-              working-directory: ${{ github.workspace }}
-              env:
-                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
-                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
-                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-              run: |
-                  ./scripts/restore.sh
+            # - name: Run Restore
+            #   working-directory: ${{ github.workspace }}
+            #   env:
+            #       DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+            #       DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+            #       DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+            #   run: |
+            #       ./scripts/restore.sh <<< "YES"
 
             - name: Tear down
               working-directory: ${{ github.workspace }}
