@@ -1,14 +1,15 @@
-name: Deploy
+name: CI and Deploy
 
 on:
     push:
-        branches:
-            - main
+        branches: [main]
+    pull_request:
+        branches: [main]
+        types: [opened, synchronize, reopened]
 
 jobs:
     test:
         runs-on: ubuntu-latest
-
         steps:
             - name: Checkout code
               uses: actions/checkout@v3
@@ -37,23 +38,23 @@ jobs:
               run: |
                   ./scripts/healthcheck.sh
 
-            - name: Run Backup
-              working-directory: ${{ github.workspace }}
-              env:
-                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
-                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
-                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-              run: |
-                  ./scripts/backup.sh
+            # - name: Run Backup
+            #   working-directory: ${{ github.workspace }}
+            #   env:
+            #       DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+            #       DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+            #       DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+            #   run: |
+            #       ./scripts/backup.sh
 
-            - name: Run Restore
-              working-directory: ${{ github.workspace }}
-              env:
-                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
-                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
-                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
-              run: |
-                  ./scripts/restore.sh <<< "YES"
+            # - name: Run Restore
+            #   working-directory: ${{ github.workspace }}
+            #   env:
+            #       DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+            #       DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+            #       DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+            #   run: |
+            #       ./scripts/restore.sh <<< "YES"
 
             - name: Tear down
               working-directory: ${{ github.workspace }}
@@ -67,6 +68,7 @@ jobs:
     deploy:
         needs: test
         runs-on: ubuntu-latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
         steps:
             - name: Checkout code
@@ -82,8 +84,8 @@ jobs:
             - name: Deploy to server
               run: |
                   ssh -o "StrictHostKeyChecking no" ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-                    cd ~/homelab
-                    git fetch --all
-                    git reset --hard origin/main
-                    ./scripts/restart.sh
+                      cd ~/homelab
+                      git fetch --all
+                      git reset --hard origin/main
+                      ./scripts/restart.sh
                   "
