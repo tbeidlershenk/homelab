@@ -1,14 +1,15 @@
-name: Deploy
+name: CI and Deploy
 
 on:
     push:
-        branches:
-            - main
+        branches: [main]
+    pull_request:
+        branches: [main]
+        types: [opened, synchronize, reopened]
 
 jobs:
     test:
         runs-on: ubuntu-latest
-
         steps:
             - name: Checkout code
               uses: actions/checkout@v3
@@ -67,6 +68,7 @@ jobs:
     deploy:
         needs: test
         runs-on: ubuntu-latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
         steps:
             - name: Checkout code
@@ -82,8 +84,8 @@ jobs:
             - name: Deploy to server
               run: |
                   ssh -o "StrictHostKeyChecking no" ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-                    cd ~/homelab
-                    git fetch --all
-                    git reset --hard origin/main
-                    ./scripts/restart.sh
+                      cd ~/homelab
+                      git fetch --all
+                      git reset --hard origin/main
+                      ./scripts/restart.sh
                   "
