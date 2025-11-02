@@ -55,32 +55,20 @@ gh ssh-key add $SSH_PRIVATE_KEY.pub --title "$GITHUB_SSH_KEY_TITLE"
 ssh -T git@github.com 
 log "GitHub SSH key setup complete." 
 
-# Set SSH secrets
-gh secret set SSH_PRIVATE_KEY -b @"$SSH_PRIVATE_KEY" --repo "$REPO"
-gh secret set SSH_USER -b "$USER" --repo "$REPO"
-gh secret set SSH_HOST -b "homelab" --repo "$REPO"
-gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
-log "Updated GitHub secrets for repository $REPO." 
-
 # Set Git config
 git config --global user.email "tbeidlershenk@gmail.com"
 git config --global user.name "Tobias Beidler-Shenk"
 git config --global user.token $GITHUB_PAT
 log "Set global Git config." 
 
-# Generate a dedicated SSH key for Cronicle if it doesn't exist
-if [ ! -f "$CRONICLE_SSH_KEY" ]; then
-    sudo ssh-keygen -t ed25519 -f "$CRONICLE_SSH_KEY" -N ""
-    sudo chmod 600 "$CRONICLE_SSH_KEY"
-    echo "Generated SSH key for Cronicle container:"
-    sudo cat "${CRONICLE_SSH_KEY}.pub"
+# Set SSH secrets (prod only)
+if [ $ENVIRONMENT == "prod" ]; then
+    gh secret set SSH_PRIVATE_KEY -b @"$SSH_PRIVATE_KEY" --repo "$REPO"
+    gh secret set SSH_USER -b "$USER" --repo "$REPO"
+    gh secret set SSH_HOST -b "$HOSTNAME" --repo "$REPO"
+    gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
+    log "Updated GitHub secrets for repository $REPO." 
 fi
-
-# Add the public key to the host's authorized_keys (allows container SSH)
-grep -qxF "$(cat ${CRONICLE_SSH_KEY}.pub)" "$AUTHORIZED_KEYS" || \
-    sudo cat "${CRONICLE_SSH_KEY}.pub" >> "$AUTHORIZED_KEYS"
-echo "Added Cronicle container public key to host's authorized_keys."
-log "Container SSH access complete." 
 
 # Install Docker
 if ! command -v docker &> /dev/null; then

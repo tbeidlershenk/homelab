@@ -3,7 +3,6 @@
 
 ENV_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.env"
 
-# If we have a .env file we are in development environment
 if [ -f $ENV_FILE ]; then
     set -a; source $ENV_FILE; set +a
 fi
@@ -34,6 +33,7 @@ eval "$(doppler secrets download \
 [ -z "$FILEN_PASSWORD" ] && echo "Error: FILEN_PASSWORD is not set" && exit 1
 [ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set" && exit 1
 [ -z "$REGISTRY_FILE" ] && echo "Error: REGISTRY_FILE is not set" && exit 1
+[ -z "$HOSTNAME" ] && echo "Error: HOSTNAME is not set" && exit 1 
 [ -z "$REPO" ] && echo "Error: REPO is not set" && exit 1 
 [ -z "$EMAIL" ] && echo "Error: EMAIL is not set" && exit 1 
 [ -z "$USER" ] && echo "Error: USER is not set" && exit 1
@@ -54,7 +54,7 @@ REGISTRY_PATH="$BASE_DIR/$REGISTRY_FILE"
 
 # Other variables
 TIMESTAMP="$(date +"%Y-%m-%d %H:%M:%S")"
-GITHUB_SSH_KEY_TITLE="homelab_$(date +%F)"
+GITHUB_SSH_KEY_TITLE="$HOSTNAME-$(date +%F)"
 AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
 SSH_PRIVATE_KEY="$HOME/.ssh/id_ed25519"
 CRONICLE_SSH_KEY="$CRONICLE_SSH_DIR/id_ed25519"
