@@ -17,10 +17,10 @@ services:
             - "3012:3012"
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - ${VOLUMES_DIR}/cronicle/data:/opt/cronicle/data
-            - ${VOLUMES_DIR}/cronicle/logs:/opt/cronicle/logs
-            - ${VOLUMES_DIR}/cronicle/plugins:/opt/cronicle/plugins
-            - ${VOLUMES_DIR}/cronicle/ssh:/opt/cronicle/ssh
+            - ${DATA_DIR}/cronicle/data:/opt/cronicle/data
+            - ${DATA_DIR}/cronicle/logs:/opt/cronicle/logs
+            - ${DATA_DIR}/cronicle/plugins:/opt/cronicle/plugins
+            - ${DATA_DIR}/cronicle/ssh:/opt/cronicle/ssh
         healthcheck:
             test: ["CMD-SHELL", "curl -f http://localhost:3012/ || exit 1"]
             interval: 15s

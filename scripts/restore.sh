@@ -6,7 +6,7 @@ source "$script_context/doppler-get.sh"
 echo "Restoring Docker volumes from backup: $BACKUP_DIR"
 
 # Confirm before overwriting volumes
-read -p "WARNING: This will overwrite existing Docker volumes at $VOLUMES_DIR. Proceed? (confirm YES): " confirm_restore
+read -p "WARNING: This will overwrite existing Docker volumes at $DATA_DIR. Proceed? (confirm YES): " confirm_restore
 if [[ "$confirm_restore" != "YES" ]]; then
     echo "Restore aborted." && exit 0
 fi
