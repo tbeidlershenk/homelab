@@ -13,7 +13,7 @@ fi
 [ -z "$DOPPLER_TOKEN" ] && echo "Error: DOPPLER_TOKEN is not configured." && exit 1
 
 # Inject secrets into environment
-echo "Environment: $ENVIRONMENT"
+echo "Environment: $DOPPLER_CONFIG"
 echo "Downloading secrets from PROJECT: $DOPPLER_PROJECT, CONFIG: $DOPPLER_CONFIG..."
 eval "$(doppler secrets download \
     --token "$DOPPLER_TOKEN" \
@@ -54,7 +54,7 @@ REGISTRY_PATH="$BASE_DIR/$REGISTRY_FILE"
 
 # Other variables
 TIMESTAMP="$(date +"%Y-%m-%d %H:%M:%S")"
-GITHUB_SSH_KEY_TITLE="$HOSTNAME-$(date +%F)"
+GITHUB_SSH_KEY_TITLE="$HOSTNAME"
 AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
 SSH_PRIVATE_KEY="$HOME/.ssh/id_ed25519"
 CRONICLE_SSH_KEY="$CRONICLE_SSH_DIR/id_ed25519"

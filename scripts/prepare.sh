@@ -16,7 +16,7 @@ source "$script_context/doppler-get.sh"
 log "Loaded Doppler environment variables." 
 
 # Verify paths exist
-[ ! -f "$REGISTRY_PATH" ]; then
+if [ ! -f "$REGISTRY_PATH" ]; then
     echo "REGISTRY_FILE not found at $REGISTRY_PATH. Creating from default."
     sudo cp "$BASE_DIR/config/default_registry.json" "$REGISTRY_PATH"
     log "Copied default registry to $REGISTRY_PATH."
@@ -46,14 +46,18 @@ log "Installed apt packages."
 curl -sL https://filen.io/cli.sh | sudo bash
 log "Installed Filen CLI."
 
-# Setup GitHub access
-if [ ! -f $SSH_PRIVATE_KEY ]; then
-    ssh-keygen -t ed25519 -f $SSH_PRIVATE_KEY -N ""
+# Setup GitHub access (dev/prod only)
+if [ $ENVIRONMENT != "stage" ]; then
+    if [ ! -f $SSH_PRIVATE_KEY ]; then
+        ssh-keygen -t ed25519 -f $SSH_PRIVATE_KEY -N ""
+    fi
+    echo $GITHUB_PAT | gh auth login --with-token
+    gh ssh-key add $SSH_PRIVATE_KEY.pub --title "$GITHUB_SSH_KEY_TITLE"
+    ssh -T git@github.com 
+    log "GitHub SSH key setup complete." 
+else
+    log "Skipping GitHub SSH key setup in $ENVIRONMENT environment." 
 fi
-echo $GITHUB_PAT | gh auth login --with-token
-gh ssh-key add $SSH_PRIVATE_KEY.pub --title "$GITHUB_SSH_KEY_TITLE"
-ssh -T git@github.com 
-log "GitHub SSH key setup complete." 
 
 # Set Git config
 git config --global user.email "tbeidlershenk@gmail.com"
@@ -68,6 +72,8 @@ if [ $ENVIRONMENT == "prod" ]; then
     gh secret set SSH_HOST -b "$HOSTNAME" --repo "$REPO"
     gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
     log "Updated GitHub secrets for repository $REPO." 
+else
+    log "Skipping GitHub secrets setup in $ENVIRONMENT environment." 
 fi
 
 # Install Docker
@@ -102,12 +108,16 @@ ExecStart=/usr/sbin/tailscaled --statedir=$TAILSCALE_STATE_DIR
 EOF
 log "Configured Tailscale systemd service."
 
-sudo tailscale up \
-    --authkey "$TAILSCALE_AUTHKEY" \
-    --ssh \
-    --hostname "$TAILSCALE_HOSTNAME" \
-    --accept-routes \
-    --advertise-tags=tag:$ENVIRONMENT
-sudo systemctl enable --now tailscaled
-sudo systemctl restart tailscaled
-log "Tailscale daemon running." 
+if [ $ENVIRONMENT != "stage" ]; then
+    sudo tailscale up \
+        --authkey "$TAILSCALE_AUTHKEY" \
+        --ssh \
+        --hostname "$TAILSCALE_HOSTNAME" \
+        --accept-routes \
+        --advertise-tags=tag:$ENVIRONMENT
+    sudo systemctl enable --now tailscaled
+    sudo systemctl restart tailscaled
+    log "Tailscale daemon running." 
+else
+    log "Skipping Tailscale up command in $ENVIRONMENT environment."
+fi
