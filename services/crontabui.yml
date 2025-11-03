@@ -11,5 +11,6 @@ services:
             - BASIC_AUTH_PWD=${CRONTABUI_AUTH_PWD}
             - CRON_DB_PATH=/crontab-ui/crontabs
         volumes:
+            - /etc/cron.d:/etc/crontabs
             - ${DATA_DIR}/crontabui/data:/crontab-ui/crontabs
             - ${DATA_DIR}/crontabui/config:/crontab-ui/config
