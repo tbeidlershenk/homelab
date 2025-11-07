@@ -90,5 +90,6 @@ jobs:
                       cd ~/homelab
                       git fetch --all
                       git reset --hard origin/main
+                      ./scripts/prepare.sh
                       ./scripts/restart.sh
                   "
