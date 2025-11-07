@@ -8,6 +8,6 @@ services:
             - "9443:9443"
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - ${VOLUMES_DIR}/portainer/data:/data
+            - ${DATA_DIR}/portainer/data:/data
         healthcheck:
             disable: false

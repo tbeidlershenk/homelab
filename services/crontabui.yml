@@ -1,0 +1,16 @@
+services:
+    crontabui:
+        image: tbeidlershenk/crontab-ui:latest
+        container_name: crontabui
+        user: root:root
+        hostname: crontabui
+        restart: unless-stopped
+        network_mode: host
+        environment:
+            - BASIC_AUTH_USER=${CRONTABUI_AUTH_USER}
+            - BASIC_AUTH_PWD=${CRONTABUI_AUTH_PWD}
+            - CRON_DB_PATH=/crontab-ui/crontabs
+        volumes:
+            - /etc/cron.d:/etc/crontabs
+            - ${DATA_DIR}/crontabui/data:/crontab-ui/crontabs
+            - ${DATA_DIR}/crontabui/config:/crontab-ui/config

@@ -14,11 +14,14 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v3
 
-            - name: Set up Docker
-              uses: docker/setup-buildx-action@v2
-
-            - name: Install Doppler CLI
-              uses: dopplerhq/cli-action@v3
+            - name: Run Prepare Script
+              working-directory: ${{ github.workspace }}
+              env:
+                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+              run: |
+                  ./scripts/prepare.sh
 
             - name: Start services
               working-directory: ${{ github.workspace }}
@@ -87,5 +90,6 @@ jobs:
                       cd ~/homelab
                       git fetch --all
                       git reset --hard origin/main
+                      ./scripts/prepare.sh
                       ./scripts/restart.sh
                   "

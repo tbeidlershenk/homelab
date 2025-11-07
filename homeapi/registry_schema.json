@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": { "type": "string" },
+      "profile": { "type": "string" },
+      "enabled": { "type": "boolean" },
+      "healthcheck": { "type": "boolean" },
+      "pause_on_backup": { "type": "boolean" },
+      "cloud_backup": { "type": "boolean" }
+    },
+    "required": [
+      "name",
+      "profile",
+      "enabled",
+      "healthcheck",
+      "pause_on_backup",
+      "cloud_backup"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -15,13 +15,6 @@ script_context=$(dirname "${BASH_SOURCE[0]}")
 source "$script_context/doppler-get.sh"
 log "Loaded Doppler environment variables." 
 
-# Verify paths exist
-[ ! -f "$REGISTRY_PATH" ]; then
-    echo "REGISTRY_FILE not found at $REGISTRY_PATH. Creating from default."
-    sudo cp "$BASE_DIR/config/default_registry.json" "$REGISTRY_PATH"
-    log "Copied default registry to $REGISTRY_PATH."
-fi
-
 # Ensure in homelab directory (sanity check)
 cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 
@@ -29,9 +22,8 @@ cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 mkdir -p $LOGS_DIR
 mkdir -p $BACKUP_DIR
 mkdir -p $DATA_DIR
-mkdir -p $VOLUMES_DIR
+sudo mkdir -p /etc/homelab
 sudo mkdir -p $TAILSCALE_STATE_DIR
-sudo mkdir -p "$CRONICLE_SSH_DIR"
 log "Created necessary directories." 
 
 # Ensure execute permissions
@@ -44,24 +36,27 @@ sudo apt upgrade -y
 sudo apt install -y curl git gh yq
 log "Installed apt packages." 
 
+# Install Python 
+sudo apt install python3-pip -y
+sudo apt install python3-venv -y
+log "Installed Python & Pip."
+
+# Install Filen CLI
 curl -sL https://filen.io/cli.sh | sudo bash
 log "Installed Filen CLI."
 
-# Setup GitHub access
-if [ ! -f $SSH_PRIVATE_KEY ]; then
-    ssh-keygen -t ed25519 -f $SSH_PRIVATE_KEY -N ""
+# Setup GitHub access (dev/prod only)
+if [ $ENVIRONMENT != "stage" ]; then
+    if [ ! -f $SSH_PRIVATE_KEY ]; then
+        ssh-keygen -t ed25519 -f $SSH_PRIVATE_KEY -N ""
+    fi
+    echo $GITHUB_PAT | gh auth login --with-token
+    gh ssh-key add $SSH_PRIVATE_KEY.pub --title "$GITHUB_SSH_KEY_TITLE"
+    ssh -T git@github.com 
+    log "GitHub SSH key setup complete." 
+else
+    log "Skipping GitHub SSH key setup in $ENVIRONMENT environment." 
 fi
-echo $GITHUB_PAT | gh auth login --with-token
-gh ssh-key add $SSH_PRIVATE_KEY.pub --title "$GITHUB_SSH_KEY_TITLE"
-ssh -T git@github.com 
-log "GitHub SSH key setup complete." 
-
-# Set SSH secrets
-gh secret set SSH_PRIVATE_KEY -b @"$SSH_PRIVATE_KEY" --repo "$REPO"
-gh secret set SSH_USER -b "$USER" --repo "$REPO"
-gh secret set SSH_HOST -b "homelab" --repo "$REPO"
-gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
-log "Updated GitHub secrets for repository $REPO." 
 
 # Set Git config
 git config --global user.email "tbeidlershenk@gmail.com"
@@ -69,19 +64,16 @@ git config --global user.name "Tobias Beidler-Shenk"
 git config --global user.token $GITHUB_PAT
 log "Set global Git config." 
 
-# Generate a dedicated SSH key for Cronicle if it doesn't exist
-if [ ! -f "$CRONICLE_SSH_KEY" ]; then
-    sudo ssh-keygen -t ed25519 -f "$CRONICLE_SSH_KEY" -N ""
-    sudo chmod 600 "$CRONICLE_SSH_KEY"
-    echo "Generated SSH key for Cronicle container:"
-    sudo cat "${CRONICLE_SSH_KEY}.pub"
+# Set SSH secrets (prod only)
+if [ $ENVIRONMENT == "prod" ]; then
+    gh secret set SSH_PRIVATE_KEY -b @"$SSH_PRIVATE_KEY" --repo "$REPO"
+    gh secret set SSH_USER -b "$HOMELAB_USER" --repo "$REPO"
+    gh secret set SSH_HOST -b "$HOSTNAME" --repo "$REPO"
+    gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
+    log "Updated GitHub secrets for repository $REPO." 
+else
+    log "Skipping GitHub secrets setup in $ENVIRONMENT environment." 
 fi
-
-# Add the public key to the host's authorized_keys (allows container SSH)
-grep -qxF "$(cat ${CRONICLE_SSH_KEY}.pub)" "$AUTHORIZED_KEYS" || \
-    sudo cat "${CRONICLE_SSH_KEY}.pub" >> "$AUTHORIZED_KEYS"
-echo "Added Cronicle container public key to host's authorized_keys."
-log "Container SSH access complete." 
 
 # Install Docker
 if ! command -v docker &> /dev/null; then
@@ -106,21 +98,41 @@ log "Docker daemon running."
 curl -fsSL https://tailscale.com/install.sh | sh
 log "Tailscale installation complete." 
 
-# Enable Tailscale service
-sudo mkdir -p /etc/systemd/system/tailscaled.service.d
-sudo tee /etc/systemd/system/tailscaled.service.d/override.conf > /dev/null <<EOF
-[Service]
-ExecStart=
-ExecStart=/usr/sbin/tailscaled --statedir=$TAILSCALE_STATE_DIR
-EOF
-log "Configured Tailscale systemd service."
+# Setup custom systemd services
+sudo cp $CONFIG_DIR/tailscaled.service /etc/systemd/system/tailscaled.service
+sudo cp $CONFIG_DIR/homeapi.service /etc/systemd/system/homeapi.service
+sudo cp $CONFIG_DIR/wrappers/homeapi_start.sh /etc/homelab/homeapi_start.sh
+sudo cp $CONFIG_DIR/wrappers/tailscaled_start.sh /etc/homelab/tailscaled_start.sh
+sudo chmod +x /etc/homelab/homeapi_start.sh
+sudo chmod +x /etc/homelab/tailscaled_start.sh
+sudo systemctl daemon-reload
+log "Setup custom systemd services."
 
-sudo tailscale up \
-    --authkey "$TAILSCALE_AUTHKEY" \
-    --ssh \
-    --hostname "$TAILSCALE_HOSTNAME" \
-    --accept-routes \
-    --advertise-tags=tag:$ENVIRONMENT
-sudo systemctl enable --now tailscaled
-sudo systemctl restart tailscaled
-log "Tailscale daemon running." 
+# Enable Tailscale service
+if [ $ENVIRONMENT != "stage" ]; then
+    sudo tailscale up \
+        --authkey "$TAILSCALE_AUTHKEY" \
+        --ssh \
+        --hostname "$TAILSCALE_HOSTNAME" \
+        --accept-routes \
+        --advertise-tags=tag:$ENVIRONMENT
+    sudo systemctl enable --now tailscaled
+    sudo systemctl restart tailscaled
+    log "Tailscale daemon running." 
+else
+    log "Skipping Tailscale up command in $ENVIRONMENT environment."
+fi
+
+# Enable HomeAPI service
+HOMEAPI_VENV_DIR="$BASE_DIR/homeapi/venv"
+if [ ! -d "$HOMEAPI_VENV_DIR" ]; then
+    python3 -m venv "$HOMEAPI_VENV_DIR"
+    log "Created HomeAPI virtual environment."
+else
+    log "HomeAPI virtual environment exists."
+fi
+"$HOMEAPI_VENV_DIR/bin/pip" install --upgrade pip
+"$HOMEAPI_VENV_DIR/bin/pip" install -r "$BASE_DIR/homeapi/requirements.txt"
+sudo systemctl enable --now homeapi
+sudo systemctl restart homeapi
+log "HomeAPI service running."

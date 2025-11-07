@@ -3,7 +3,6 @@
 
 ENV_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.env"
 
-# If we have a .env file we are in development environment
 if [ -f $ENV_FILE ]; then
     set -a; source $ENV_FILE; set +a
 fi
@@ -14,15 +13,16 @@ fi
 [ -z "$DOPPLER_TOKEN" ] && echo "Error: DOPPLER_TOKEN is not configured." && exit 1
 
 # Inject secrets into environment
-echo "Environment: $ENVIRONMENT"
+echo "Environment: $DOPPLER_CONFIG"
 echo "Downloading secrets from PROJECT: $DOPPLER_PROJECT, CONFIG: $DOPPLER_CONFIG..."
 eval "$(doppler secrets download \
     --token "$DOPPLER_TOKEN" \
-    --project $DOPPLER_PROJECT \
-    --config $DOPPLER_CONFIG \
+    --project "$DOPPLER_PROJECT" \
+    --config "$DOPPLER_CONFIG" \
     --no-file \
     --format env \
     | sed 's/^/export /')"
+echo "Injected secrets into environment."
 
 # Verify required environment variables are set
 [ -z "$TAILSCALE_AUTHKEY" ] && echo "Error: TAILSCALE_AUTHKEY is not set" && exit 1
@@ -33,9 +33,10 @@ eval "$(doppler secrets download \
 [ -z "$FILEN_PASSWORD" ] && echo "Error: FILEN_PASSWORD is not set" && exit 1
 [ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set" && exit 1
 [ -z "$REGISTRY_FILE" ] && echo "Error: REGISTRY_FILE is not set" && exit 1
+[ -z "$HOSTNAME" ] && echo "Error: HOSTNAME is not set" && exit 1 
 [ -z "$REPO" ] && echo "Error: REPO is not set" && exit 1 
 [ -z "$EMAIL" ] && echo "Error: EMAIL is not set" && exit 1 
-[ -z "$USER" ] && echo "Error: USER is not set" && exit 1
+[ -z "$HOMELAB_USER" ] && echo "Error: USER is not set" && exit 1
 
 set -a
 
@@ -45,24 +46,35 @@ TEST_CONFIG_DIR="$BASE_DIR/config/test"
 SCRIPTS_DIR="$BASE_DIR/scripts"
 SERVICES_DIR="$BASE_DIR/services"
 DATA_DIR="$BASE_DIR/data"
-VOLUMES_DIR="$DATA_DIR/volumes"
 BACKUP_DIR="$BASE_DIR/backup"
 LOGS_DIR="$BASE_DIR/logs"
-CRONICLE_SSH_DIR="$VOLUMES_DIR/cronicle/ssh"
 TAILSCALE_STATE_DIR="$BASE_DIR/data/tailscale"
 REGISTRY_PATH="$BASE_DIR/$REGISTRY_FILE"
 
 # Other variables
-TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-GITHUB_SSH_KEY_TITLE="homelab_$(date +%F)"
+TIMESTAMP="$(date +"%Y-%m-%d %H:%M:%S")"
+GITHUB_SSH_KEY_TITLE="$HOSTNAME"
 AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
 SSH_PRIVATE_KEY="$HOME/.ssh/id_ed25519"
-CRONICLE_SSH_KEY="$CRONICLE_SSH_DIR/id_ed25519"
-ENVIRONMENT=$DOPPLER_CONFIG
+ENVIRONMENT="$DOPPLER_CONFIG"
 
 set +a
 
 # Verify paths exist
-[ ! -f "$REGISTRY_PATH" ] && echo "Error: REGISTRY_FILE not found at $REGISTRY_PATH" && exit 1
+if [ ! -f "$REGISTRY_PATH" ]; then
+    echo "REGISTRY_FILE not found at $REGISTRY_PATH. Creating from default."
+    sudo mkdir -p "$(dirname "$REGISTRY_PATH")"
+    sudo cp "$BASE_DIR/config/default_registry.json" "$REGISTRY_PATH"
+    log "Copied default registry to $REGISTRY_PATH."
+fi
+
+# Save to .env file for systemd services
+sudo doppler secrets download \
+    --token "$DOPPLER_TOKEN" \
+    --project "$DOPPLER_PROJECT" \
+    --config "$DOPPLER_CONFIG" \
+    --no-file \
+    --format env | sudo tee /etc/homelab/.env > /dev/null
+echo "Saved secrets to configuration file."
 
 echo "Done."
