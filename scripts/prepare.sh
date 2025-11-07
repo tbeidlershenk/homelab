@@ -15,13 +15,6 @@ script_context=$(dirname "${BASH_SOURCE[0]}")
 source "$script_context/doppler-get.sh"
 log "Loaded Doppler environment variables." 
 
-# Verify paths exist
-if [ ! -f "$REGISTRY_PATH" ]; then
-    echo "REGISTRY_FILE not found at $REGISTRY_PATH. Creating from default."
-    sudo cp "$BASE_DIR/config/default_registry.json" "$REGISTRY_PATH"
-    log "Copied default registry to $REGISTRY_PATH."
-fi
-
 # Ensure in homelab directory (sanity check)
 cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 
@@ -29,8 +22,8 @@ cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 mkdir -p $LOGS_DIR
 mkdir -p $BACKUP_DIR
 mkdir -p $DATA_DIR
+sudo mkdir -p /etc/homelab
 sudo mkdir -p $TAILSCALE_STATE_DIR
-sudo mkdir -p "$CRONICLE_SSH_DIR"
 log "Created necessary directories." 
 
 # Ensure execute permissions
@@ -43,6 +36,12 @@ sudo apt upgrade -y
 sudo apt install -y curl git gh yq
 log "Installed apt packages." 
 
+# Install Python 
+sudo apt install python3-pip -y
+sudo apt install python3-venv -y
+log "Installed Python & Pip."
+
+# Install Filen CLI
 curl -sL https://filen.io/cli.sh | sudo bash
 log "Installed Filen CLI."
 
@@ -68,7 +67,7 @@ log "Set global Git config."
 # Set SSH secrets (prod only)
 if [ $ENVIRONMENT == "prod" ]; then
     gh secret set SSH_PRIVATE_KEY -b @"$SSH_PRIVATE_KEY" --repo "$REPO"
-    gh secret set SSH_USER -b "$USER" --repo "$REPO"
+    gh secret set SSH_USER -b "$HOMELAB_USER" --repo "$REPO"
     gh secret set SSH_HOST -b "$HOSTNAME" --repo "$REPO"
     gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
     log "Updated GitHub secrets for repository $REPO." 
@@ -99,15 +98,17 @@ log "Docker daemon running."
 curl -fsSL https://tailscale.com/install.sh | sh
 log "Tailscale installation complete." 
 
-# Enable Tailscale service
-sudo mkdir -p /etc/systemd/system/tailscaled.service.d
-sudo tee /etc/systemd/system/tailscaled.service.d/override.conf > /dev/null <<EOF
-[Service]
-ExecStart=
-ExecStart=/usr/sbin/tailscaled --statedir=$TAILSCALE_STATE_DIR
-EOF
-log "Configured Tailscale systemd service."
+# Setup custom systemd services
+sudo cp $CONFIG_DIR/tailscaled.service /etc/systemd/system/tailscaled.service
+sudo cp $CONFIG_DIR/homeapi.service /etc/systemd/system/homeapi.service
+sudo cp $CONFIG_DIR/wrappers/homeapi_start.sh /etc/homelab/homeapi_start.sh
+sudo cp $CONFIG_DIR/wrappers/tailscaled_start.sh /etc/homelab/tailscaled_start.sh
+sudo chmod +x /etc/homelab/homeapi_start.sh
+sudo chmod +x /etc/homelab/tailscaled_start.sh
+sudo systemctl daemon-reload
+log "Setup custom systemd services."
 
+# Enable Tailscale service
 if [ $ENVIRONMENT != "stage" ]; then
     sudo tailscale up \
         --authkey "$TAILSCALE_AUTHKEY" \
@@ -121,3 +122,17 @@ if [ $ENVIRONMENT != "stage" ]; then
 else
     log "Skipping Tailscale up command in $ENVIRONMENT environment."
 fi
+
+# Enable HomeAPI service
+HOMEAPI_VENV_DIR="$BASE_DIR/homeapi/venv"
+if [ ! -d "$HOMEAPI_VENV_DIR" ]; then
+    python3 -m venv "$HOMEAPI_VENV_DIR"
+    log "Created HomeAPI virtual environment."
+else
+    log "HomeAPI virtual environment exists."
+fi
+"$HOMEAPI_VENV_DIR/bin/pip" install --upgrade pip
+"$HOMEAPI_VENV_DIR/bin/pip" install -r "$BASE_DIR/homeapi/requirements.txt"
+sudo systemctl enable --now homeapi
+sudo systemctl restart homeapi
+log "HomeAPI service running."

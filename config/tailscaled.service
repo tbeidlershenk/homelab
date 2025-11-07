@@ -1,0 +1,18 @@
+[Unit]
+Description=Tailscale Daemon
+After=network.target
+
+[Service]
+User=root
+Group=root
+# Clear the default ExecStart before redefining
+ExecStart=
+ExecStart=/etc/homelab/tailscaled_start.sh
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tailscaled
+
+[Install]
+WantedBy=multi-user.target
