@@ -5,4 +5,4 @@ volumes
 backup
 logs
 venv
-
+__pycache__
