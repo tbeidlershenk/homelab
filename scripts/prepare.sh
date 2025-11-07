@@ -117,7 +117,7 @@ if [ $ENVIRONMENT != "stage" ]; then
         --accept-routes \
         --advertise-tags=tag:$ENVIRONMENT
     sudo systemctl enable --now tailscaled
-    sudo systemctl restart tailscaled
+    sudo systemctl start tailscaled
     log "Tailscale daemon running." 
 else
     log "Skipping Tailscale up command in $ENVIRONMENT environment."
@@ -134,5 +134,5 @@ fi
 "$HOMEAPI_VENV_DIR/bin/pip" install --upgrade pip
 "$HOMEAPI_VENV_DIR/bin/pip" install -r "$BASE_DIR/homeapi/requirements.txt"
 sudo systemctl enable --now homeapi
-sudo systemctl restart homeapi
+sudo systemctl start homeapi
 log "HomeAPI service running."
