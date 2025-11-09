@@ -23,7 +23,7 @@ mkdir -p $LOGS_DIR
 mkdir -p $BACKUP_DIR
 mkdir -p $DATA_DIR
 sudo mkdir -p /etc/homelab
-sudo mkdir -p $TAILSCALE_STATE_DIR
+sudo mkdir -p $DATA_DIR/tailscale
 log "Created necessary directories." 
 
 # Ensure execute permissions

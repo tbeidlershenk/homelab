@@ -48,7 +48,6 @@ SERVICES_DIR="$BASE_DIR/services"
 DATA_DIR="$BASE_DIR/data"
 BACKUP_DIR="$BASE_DIR/backup"
 LOGS_DIR="$BASE_DIR/logs"
-TAILSCALE_STATE_DIR="$BASE_DIR/data/tailscale"
 REGISTRY_PATH="$BASE_DIR/$REGISTRY_FILE"
 
 # Other variables

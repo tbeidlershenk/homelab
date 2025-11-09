@@ -5,5 +5,5 @@ set -a
 source /etc/homelab/.env
 set -a
 
-cd /var/lib/tailscale
+TAILSCALE_STATE_DIR="$BASE_DIR/data/tailscale"
 /usr/sbin/tailscaled --statedir=${TAILSCALE_STATE_DIR}
