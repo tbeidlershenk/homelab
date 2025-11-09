@@ -6,6 +6,7 @@ import os
 import sys
 import subprocess
 import jsonschema
+import asyncio
 
 maintenance = Blueprint('maintenance', __name__)
 
@@ -17,30 +18,62 @@ if not os.path.exists(base_dir):
 scripts_dir = base_dir + '/scripts'
 
 @maintenance.route('/backup', methods=['GET'])
-def backup():
+async def backup():
     script_path = os.path.join(scripts_dir, 'backup.sh')
-    result = subprocess.run(['bash', script_path])
-    logger.info(f"maintenace/backup returned status {result.returncode}")
-    return jsonify({'result': result.returncode}), 200
+    try:
+        process = await asyncio.create_subprocess_exec(
+            'bash', script_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        stdout = stdout.decode()
+        stderr = stderr.decode()
+        logger.info(f"maintenance/backup returned status {process.returncode}")
+        return jsonify({
+            'status': process.returncode,
+            'stdout': stdout.splitlines()
+        }), 200
+
+    except asyncio.TimeoutError:
+        process.kill()
+        await process.communicate()
+        return jsonify({'error': 'Backup script timed out.'}), 504
 
 @maintenance.route('/restart', methods=['GET'])
-def restart():
+async def restart():
     script_path = os.path.join(scripts_dir, 'restart.sh')
-    result = subprocess.run(['bash', script_path])
-    logger.info(f"maintenance/restart returned status {result.returncode}")
-    return jsonify({'result': result.returncode}), 200
+    try:
+        process = await asyncio.create_subprocess_exec(
+            'bash', script_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        stdout = stdout.decode()
+        stderr = stderr.decode()
+        logger.info(f"maintenance/restart returned status {process.returncode}")
+        return jsonify({
+            'status': process.returncode,
+            'stdout': stdout.splitlines()
+        }), 200
 
-@maintenance.route('/update_registry', methods=['GET'])
-def update_registry():
-    script_path = os.path.join(scripts_dir, 'update_registry.sh')
-    data = request.get_json()
-    schema_path = os.path.join(base_dir, 'registry_schema.json')
-    with open(schema_path, 'r') as f:
-        schema = json.load(f)
-    jsonschema.validate(instance=data, schema=schema)
-    result = subprocess.run(['bash', script_path])
-    logger.info(f"maintenance/update_registry returned status {result.returncode}")
-    return result.returncode
+    except asyncio.TimeoutError:
+        process.kill()
+        await process.communicate()
+        return jsonify({'error': 'Restart script timed out.'}), 504
+
+# @maintenance.route('/update_registry', methods=['GET'])
+# def update_registry():
+#     script_path = os.path.join(scripts_dir, 'update_registry.sh')
+#     data = request.get_json()
+#     schema_path = os.path.join(base_dir, 'registry_schema.json')
+#     with open(schema_path, 'r') as f:
+#         schema = json.load(f)
+#     jsonschema.validate(instance=data, schema=schema)
+#     result = subprocess.run(['bash', script_path])
+#     logger.info(f"maintenance/update_registry returned status {result.returncode}")
+#     return result.returncode
 
 # @maintenance.route('/restore', methods=['GET'])
 # def restore():

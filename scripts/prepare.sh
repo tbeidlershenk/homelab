@@ -134,5 +134,5 @@ fi
 "$HOMEAPI_VENV_DIR/bin/pip" install --upgrade pip
 "$HOMEAPI_VENV_DIR/bin/pip" install -r "$BASE_DIR/homeapi/requirements.txt"
 sudo systemctl enable --now homeapi
-sudo systemctl start homeapi
+sudo systemctl restart homeapi
 log "HomeAPI service running."

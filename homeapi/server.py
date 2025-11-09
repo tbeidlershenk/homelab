@@ -8,6 +8,7 @@ server = Flask(__name__)
 load_dotenv()
 
 server.register_blueprint(maintenance, url_prefix="/maintenance")
+server.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 
 @server.route('/')
 def home():
