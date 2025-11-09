@@ -1,5 +1,5 @@
 import json
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Response, jsonify, request
 from dotenv import load_dotenv
 from logger import logger
 import os
@@ -30,15 +30,11 @@ async def backup():
         stdout = stdout.decode()
         stderr = stderr.decode()
         logger.info(f"maintenance/backup returned status {process.returncode}")
-        return jsonify({
-            'status': process.returncode,
-            'stdout': stdout.splitlines()
-        }), 200
-
-    except asyncio.TimeoutError:
+        return Response(stdout, mimetype='text/plain'), 200
+    except:
         process.kill()
-        await process.communicate()
-        return jsonify({'error': 'Backup script timed out.'}), 504
+        stdout, stderr = await process.communicate()
+        return Response(stdout, mimetype='text/plain'), 500
 
 @maintenance.route('/restart', methods=['GET'])
 async def restart():
@@ -53,15 +49,11 @@ async def restart():
         stdout = stdout.decode()
         stderr = stderr.decode()
         logger.info(f"maintenance/restart returned status {process.returncode}")
-        return jsonify({
-            'status': process.returncode,
-            'stdout': stdout.splitlines()
-        }), 200
-
-    except asyncio.TimeoutError:
+        return Response(stdout, mimetype='text/plain'), 200
+    except:
         process.kill()
-        await process.communicate()
-        return jsonify({'error': 'Restart script timed out.'}), 504
+        stdout, stderr = await process.communicate()
+        return Response(stdout, mimetype='text/plain'), 500
 
 # @maintenance.route('/update_registry', methods=['GET'])
 # def update_registry():
