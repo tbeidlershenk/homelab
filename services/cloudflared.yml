@@ -1,0 +1,11 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    user: root:root
+    restart: unless-stopped
+    command: tunnel run
+    volumes:
+      - ${DATA_DIR}/cloudflared:/etc/cloudflared:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

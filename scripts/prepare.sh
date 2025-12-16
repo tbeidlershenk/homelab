@@ -99,10 +99,13 @@ curl -fsSL https://tailscale.com/install.sh | sh
 log "Tailscale installation complete." 
 
 # Setup custom systemd services
+sudo cp $CONFIG_DIR/cloudflared.service /etc/systemd/system/cloudflared.service
 sudo cp $CONFIG_DIR/tailscaled.service /etc/systemd/system/tailscaled.service
 sudo cp $CONFIG_DIR/homeapi.service /etc/systemd/system/homeapi.service
+sudo cp $CONFIG_DIR/wrappers/cloudflared_start.sh /etc/homelab/cloudflared_start.sh
 sudo cp $CONFIG_DIR/wrappers/homeapi_start.sh /etc/homelab/homeapi_start.sh
 sudo cp $CONFIG_DIR/wrappers/tailscaled_start.sh /etc/homelab/tailscaled_start.sh
+sudo chmod +x /etc/homelab/cloudflared_start.sh
 sudo chmod +x /etc/homelab/homeapi_start.sh
 sudo chmod +x /etc/homelab/tailscaled_start.sh
 sudo systemctl daemon-reload

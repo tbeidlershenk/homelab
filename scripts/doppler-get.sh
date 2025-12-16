@@ -31,6 +31,7 @@ echo "Injected secrets into environment."
 [ -z "$GITHUB_PAT" ] && echo "Error: GITHUB_PAT is not set" && exit 1 
 [ -z "$FILEN_EMAIL" ] && echo "Error: FILEN_EMAIL is not set" && exit 1
 [ -z "$FILEN_PASSWORD" ] && echo "Error: FILEN_PASSWORD is not set" && exit 1
+[ -z "$SIYUAN_ACCESS_AUTH_CODE" ] && echo "Error: SIYUAN_ACCESS_AUTH_CODE is not set" && exit 1
 [ -z "$BASE_DIR" ] && echo "Error: BASE_DIR is not set" && exit 1
 [ -z "$REGISTRY_FILE" ] && echo "Error: REGISTRY_FILE is not set" && exit 1
 [ -z "$HOSTNAME" ] && echo "Error: HOSTNAME is not set" && exit 1 
