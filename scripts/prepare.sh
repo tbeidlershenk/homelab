@@ -139,3 +139,8 @@ fi
 sudo systemctl enable --now homeapi
 sudo systemctl restart homeapi
 log "HomeAPI service running."
+
+# Enable Cloudflared service
+sudo systemctl enable --now cloudflared
+sudo systemctl restart cloudflared
+log "Cloudflared service running."
