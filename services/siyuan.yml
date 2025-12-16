@@ -1,0 +1,12 @@
+services:
+  main:
+    image: b3log/siyuan
+    command: ['--workspace=/siyuan/workspace/']
+    ports:
+      - "3001:6806"
+    volumes:
+      - ${DATA_DIR}/siyuan/workspace:/siyuan/workspace
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - SIYUAN_ACCESS_AUTH_CODE=${SIYUAN_ACCESS_AUTH_CODE}
