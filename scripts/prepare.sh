@@ -7,9 +7,6 @@ log() {
     echo -e "${GREEN}$*${RESET}"
 }
 
-# Install Doppler
-curl -Ls https://cli.doppler.com/install.sh | sudo sh
-
 # Source environment variables
 script_context=$(dirname "${BASH_SOURCE[0]}")
 source "$script_context/doppler-get.sh"
@@ -29,21 +26,6 @@ log "Created necessary directories."
 # Ensure execute permissions
 chmod +x $BASE_DIR/scripts/*
 log "Set execute permissions on scripts/*." 
-
-# Update system & install packages
-sudo apt update
-sudo apt upgrade -y
-sudo apt install -y curl git gh yq
-log "Installed apt packages." 
-
-# Install Python 
-sudo apt install python3-pip -y
-sudo apt install python3-venv -y
-log "Installed Python & Pip."
-
-# Install Filen CLI
-curl -sL https://filen.io/cli.sh | sudo bash
-log "Installed Filen CLI."
 
 # Setup GitHub access (dev/prod only)
 if [ $ENVIRONMENT != "stage" ]; then
@@ -75,17 +57,6 @@ else
     log "Skipping GitHub secrets setup in $ENVIRONMENT environment." 
 fi
 
-# Install Docker
-if ! command -v docker &> /dev/null; then
-    echo "Docker not found. Installing Docker using official get-docker.sh script..."
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
-    rm get-docker.sh
-    sudo usermod -aG docker $USER
-    echo "You may need to re-login."
-fi
-log "Docker installation complete." 
-
 # Start Docker service
 if ! systemctl is-active --quiet docker; then
     echo "Docker service is not running. Starting Docker..."
@@ -93,10 +64,6 @@ if ! systemctl is-active --quiet docker; then
     sudo systemctl start docker
 fi
 log "Docker daemon running." 
-
-# Install Tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
-log "Tailscale installation complete." 
 
 # Setup custom systemd services
 sudo cp $CONFIG_DIR/cloudflared.service /etc/systemd/system/cloudflared.service
@@ -112,7 +79,11 @@ sudo systemctl daemon-reload
 log "Setup custom systemd services."
 
 # Enable Tailscale service
-if [ $ENVIRONMENT != "stage" ]; then
+if [ $ENVIRONMENT == "stage" ]; then
+    log "Skipping Tailscale up command in $ENVIRONMENT environment."
+elif tailscale status &>/dev/null; then
+    log "Skipping Tailscale up command as it is already running."
+else
     sudo tailscale up \
         --authkey "$TAILSCALE_AUTHKEY" \
         --ssh \
@@ -122,8 +93,6 @@ if [ $ENVIRONMENT != "stage" ]; then
     sudo systemctl enable --now tailscaled
     sudo systemctl start tailscaled
     log "Tailscale daemon running." 
-else
-    log "Skipping Tailscale up command in $ENVIRONMENT environment."
 fi
 
 # Enable HomeAPI service
@@ -141,6 +110,10 @@ sudo systemctl restart homeapi
 log "HomeAPI service running."
 
 # Enable Cloudflared service
-sudo systemctl enable --now cloudflared
-sudo systemctl restart cloudflared
-log "Cloudflared service running."
+if [ $ENVIRONMENT == "prod" ]; then
+    sudo systemctl enable --now cloudflared
+    sudo systemctl restart cloudflared
+    log "Cloudflared service running."
+else
+    log "Skipping Cloudflared setup in $ENVIRONMENT environment."
+fi
