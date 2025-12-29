@@ -1,6 +1,11 @@
 #!/bin/bash
 # Prepares an environment (dev/stage/prod) for usage
 
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root (use sudo)" >&2
+    exit 1
+fi
+
 log() {
     local GREEN='\033[1;32m'
     local RESET='\033[0m'
@@ -12,6 +17,9 @@ script_context=$(dirname "${BASH_SOURCE[0]}")
 source "$script_context/doppler-get.sh"
 log "Loaded Doppler environment variables." 
 
+$SCRIPTS_DIR/doppler-save.sh
+log "Saved Doppler secrets to /etc/homelab/.env."
+
 # Ensure in homelab directory (sanity check)
 cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 
@@ -19,8 +27,8 @@ cd $BASE_DIR || { echo "Error: homelab directory not found."; exit 1; }
 mkdir -p $LOGS_DIR
 mkdir -p $BACKUP_DIR
 mkdir -p $DATA_DIR
-sudo mkdir -p /etc/homelab
-sudo mkdir -p $DATA_DIR/tailscale
+mkdir -p /etc/homelab
+mkdir -p $DATA_DIR/tailscale
 log "Created necessary directories." 
 
 # Ensure execute permissions
@@ -60,22 +68,22 @@ fi
 # Start Docker service
 if ! systemctl is-active --quiet docker; then
     echo "Docker service is not running. Starting Docker..."
-    sudo systemctl enable docker
-    sudo systemctl start docker
+    systemctl enable docker
+    systemctl start docker
 fi
 log "Docker daemon running." 
 
 # Setup custom systemd services
-sudo cp $CONFIG_DIR/cloudflared.service /etc/systemd/system/cloudflared.service
-sudo cp $CONFIG_DIR/tailscaled.service /etc/systemd/system/tailscaled.service
-sudo cp $CONFIG_DIR/homeapi.service /etc/systemd/system/homeapi.service
-sudo cp $CONFIG_DIR/wrappers/cloudflared_start.sh /etc/homelab/cloudflared_start.sh
-sudo cp $CONFIG_DIR/wrappers/homeapi_start.sh /etc/homelab/homeapi_start.sh
-sudo cp $CONFIG_DIR/wrappers/tailscaled_start.sh /etc/homelab/tailscaled_start.sh
-sudo chmod +x /etc/homelab/cloudflared_start.sh
-sudo chmod +x /etc/homelab/homeapi_start.sh
-sudo chmod +x /etc/homelab/tailscaled_start.sh
-sudo systemctl daemon-reload
+cp $CONFIG_DIR/cloudflared.service /etc/systemd/system/cloudflared.service
+cp $CONFIG_DIR/tailscaled.service /etc/systemd/system/tailscaled.service
+cp $CONFIG_DIR/homeapi.service /etc/systemd/system/homeapi.service
+cp $CONFIG_DIR/wrappers/cloudflared_start.sh /etc/homelab/cloudflared_start.sh
+cp $CONFIG_DIR/wrappers/homeapi_start.sh /etc/homelab/homeapi_start.sh
+cp $CONFIG_DIR/wrappers/tailscaled_start.sh /etc/homelab/tailscaled_start.sh
+chmod +x /etc/homelab/cloudflared_start.sh
+chmod +x /etc/homelab/homeapi_start.sh
+chmod +x /etc/homelab/tailscaled_start.sh
+systemctl daemon-reload
 log "Setup custom systemd services."
 
 # Enable Tailscale service
@@ -84,14 +92,14 @@ if [ $ENVIRONMENT == "stage" ]; then
 elif tailscale status &>/dev/null; then
     log "Skipping Tailscale up command as it is already running."
 else
-    sudo tailscale up \
+    tailscale up \
         --authkey "$TAILSCALE_AUTHKEY" \
         --ssh \
         --hostname "$TAILSCALE_HOSTNAME" \
         --accept-routes \
         --advertise-tags=tag:$ENVIRONMENT
-    sudo systemctl enable --now tailscaled
-    sudo systemctl start tailscaled
+    systemctl enable --now tailscaled
+    systemctl start tailscaled
     log "Tailscale daemon running." 
 fi
 
@@ -105,14 +113,14 @@ else
 fi
 "$HOMEAPI_VENV_DIR/bin/pip" install --upgrade pip
 "$HOMEAPI_VENV_DIR/bin/pip" install -r "$BASE_DIR/homeapi/requirements.txt"
-sudo systemctl enable --now homeapi
-sudo systemctl restart homeapi
+systemctl enable --now homeapi
+systemctl restart homeapi
 log "HomeAPI service running."
 
 # Enable Cloudflared service
 if [ $ENVIRONMENT == "prod" ]; then
-    sudo systemctl enable --now cloudflared
-    sudo systemctl restart cloudflared
+    systemctl enable --now cloudflared
+    systemctl restart cloudflared
     log "Cloudflared service running."
 else
     log "Skipping Cloudflared setup in $ENVIRONMENT environment."

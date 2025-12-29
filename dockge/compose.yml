@@ -1,0 +1,19 @@
+services:
+  dockge:
+    image: louislam/dockge:1
+    container_name: dockge
+    restart: unless-stopped
+    user: root:root
+    labels:
+      - pause_for_backup=false
+    ports:
+      - 5003:5001
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA_DIR}/dockge/data:/app/data
+      - ${DATA_DIR}/dockge/stacks:/opt/stacks
+    environment:
+      - DOCKGE_STACKS_DIR=/opt/stacks
+      - DOCKGE_ENABLE_CONSOLE=true
+    env_file:
+      - /etc/homelab/.env
