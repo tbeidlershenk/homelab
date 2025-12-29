@@ -1,6 +1,11 @@
 #!/bin/bash
 # Installs dependencies to an environment (dev/stage/prod)
 
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root (use sudo)" >&2
+    exit 1
+fi
+
 log() {
     local GREEN='\033[1;32m'
     local RESET='\033[0m'
@@ -14,7 +19,7 @@ logerror() {
 }
 
 # Install Doppler
-curl -Ls https://cli.doppler.com/install.sh | sudo sh
+curl -Ls https://cli.doppler.com/install.sh | sh
 
 # Source environment variables
 script_context=$(dirname "${BASH_SOURCE[0]}")
@@ -22,30 +27,30 @@ source "$script_context/doppler-get.sh"
 log "Loaded Doppler environment variables." 
 
 # Update system & install packages
-sudo apt update
-sudo apt upgrade -y
-sudo apt install -y curl
-sudo apt install -y git
-sudo apt install -y gh
-sudo apt install -y yq
+apt update
+apt upgrade -y
+apt install -y curl
+apt install -y git
+apt install -y gh
+apt install -y yq
 log "Installed apt packages." 
 
 # Install Python 
-sudo apt install python3-pip -y
-sudo apt install python3-venv -y
+apt install python3-pip -y
+apt install python3-venv -y
 log "Installed Python & Pip."
 
 # Install Filen CLI
-curl -sL https://filen.io/cli.sh | sudo bash
+curl -sL https://filen.io/cli.sh | bash
 log "Installed Filen CLI."
 
 # Install Docker
 if ! command -v docker &> /dev/null; then
     echo "Docker not found. Installing Docker using official get-docker.sh script..."
     curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
+    sh get-docker.sh
     rm get-docker.sh
-    sudo usermod -aG docker $USER
+    usermod -aG docker $USER
     echo "You may need to re-login."
 fi
 log "Docker installation complete." 
@@ -57,7 +62,7 @@ log "Tailscale installation complete."
 # Install Cloudflared
 if ! command -v cloudflared &> /dev/null; then
     wget -O /tmp/cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-    sudo dpkg -i /tmp/cloudflared.deb
+    dpkg -i /tmp/cloudflared.deb
     rm /tmp/cloudflared.deb
 fi
 log "Cloudflared installed."

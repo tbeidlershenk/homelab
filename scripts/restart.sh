@@ -1,15 +1,13 @@
-#!/usr/bin/env bash
-# Starts all enabled services in the registry file
-set -e
+#!/bin/bash
+# Restarts all running Docker containers
+
 script_context=$(dirname "${BASH_SOURCE[0]}")
 source "$script_context/doppler-get.sh"
 
-echo "Stopping all services..."
-source "$script_context/helpers/stop_all.sh"
+# ensure dockge is running
+docker compose -f $BASE_DIR/dockge/compose.yml up -d
+echo "Started Dockge service."
 
-# Start services enabled in registry file
-echo "Starting all enabled services..."
-source "$script_context/helpers/start_enabled.sh"
-
-echo "All enabled services started."
-
+# restart all other containers
+docker ps -q | xargs -r docker restart
+echo "Restarted all running Docker containers."

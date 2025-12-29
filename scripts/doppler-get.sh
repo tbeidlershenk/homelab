@@ -2,7 +2,6 @@
 # Acts as a wrapper to inject secrets directly into the environment
 
 ENV_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.env"
-
 if [ -f $ENV_FILE ]; then
     set -a; source $ENV_FILE; set +a
 fi
@@ -49,7 +48,6 @@ SERVICES_DIR="$BASE_DIR/services"
 DATA_DIR="$BASE_DIR/data"
 BACKUP_DIR="$BASE_DIR/backup"
 LOGS_DIR="$BASE_DIR/logs"
-REGISTRY_PATH="$BASE_DIR/$REGISTRY_FILE"
 
 # Other variables
 TIMESTAMP="$(date +"%Y-%m-%d %H:%M:%S")"
@@ -59,22 +57,5 @@ SSH_PRIVATE_KEY="$HOME/.ssh/id_ed25519"
 ENVIRONMENT="$DOPPLER_CONFIG"
 
 set +a
-
-# Verify paths exist
-if [ ! -f "$REGISTRY_PATH" ]; then
-    echo "REGISTRY_FILE not found at $REGISTRY_PATH. Creating from default."
-    sudo mkdir -p "$(dirname "$REGISTRY_PATH")"
-    sudo cp "$BASE_DIR/config/default_registry.json" "$REGISTRY_PATH"
-    log "Copied default registry to $REGISTRY_PATH."
-fi
-
-# Save to .env file for systemd services
-sudo doppler secrets download \
-    --token "$DOPPLER_TOKEN" \
-    --project "$DOPPLER_PROJECT" \
-    --config "$DOPPLER_CONFIG" \
-    --no-file \
-    --format env | sudo tee /etc/homelab/.env > /dev/null
-echo "Saved secrets to configuration file."
 
 echo "Done."

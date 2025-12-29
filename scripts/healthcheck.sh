@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 # Checks health status of services with the "healthcheck" flag
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root (use sudo)" >&2
+    exit 1
+fi
+
 set -e
 script_context=$(dirname "${BASH_SOURCE[0]}")
 source "$script_context/doppler-get.sh"
