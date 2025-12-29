@@ -22,7 +22,7 @@ jobs:
                   DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
-                  sudo ./scripts/install.sh
+                  sudo -E ./scripts/install.sh
 
             - name: Run Prepare Script
               working-directory: ${{ github.workspace }}
@@ -31,7 +31,7 @@ jobs:
                   DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
-                  sudo ./scripts/prepare.sh
+                  sudo -E ./scripts/prepare.sh
 
             - name: Run Backup Script
               working-directory: ${{ github.workspace }}
@@ -40,7 +40,7 @@ jobs:
                   DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
-                  sudo ./scripts/backup.sh
+                  sudo -E ./scripts/backup.sh
 
     deploy:
         runs-on: ubuntu-latest
