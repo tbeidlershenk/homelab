@@ -12,14 +12,15 @@ import selectors
 import traceback
 import signal
 
-tasks = Blueprint('tasks', __name__)
+tasks = Blueprint("tasks", __name__)
 
-base_dir = os.getenv('BASE_DIR')
+base_dir = os.getenv("BASE_DIR")
 if not os.path.exists(base_dir):
     print("BASE_DIR not defined or does not exist.")
     sys.exit(1)
 
-scripts_dir = base_dir + '/scripts'
+scripts_dir = base_dir + "/scripts"
+
 
 def stream_process(cmd):
     process = subprocess.Popen(
@@ -29,7 +30,7 @@ def stream_process(cmd):
         stderr=subprocess.PIPE,
         text=True,
         bufsize=1,
-        preexec_fn=os.setsid
+        preexec_fn=os.setsid,
     )
 
     try:
@@ -57,7 +58,7 @@ def stream_process(cmd):
                 break
 
         process.wait()
-        yield f"event: done\ndata: exit_code={process.returncode}\n\n"
+        yield f"event: done\ndata: {process.returncode}\n\n"
 
     except GeneratorExit:
         try:
@@ -83,7 +84,8 @@ def stream_process(cmd):
         if process.stderr:
             process.stderr.close()
 
-@tasks.route('/run/<script_name>', methods=['GET'])
+
+@tasks.route("/run/<script_name>", methods=["GET"])
 async def run_task(script_name: str):
     script_path = os.path.join(scripts_dir, f"{script_name}.sh")
     return Response(
@@ -95,3 +97,14 @@ async def run_task(script_name: str):
         },
     )
 
+
+@tasks.route("/run_unattended/<script_name>", methods=["GET"])
+async def run_task_unattended(script_name: str):
+    script_path = os.path.join(scripts_dir, f"{script_name}.sh")
+    process = subprocess.Popen(
+        ["bash", script_path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    return jsonify({"status": "started", "pid": process.pid})

@@ -58,9 +58,22 @@ jobs:
 
             - name: Deploy to server
               run: |
-                  ssh -o "StrictHostKeyChecking no" ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-                      cd ~/homelab
-                      git fetch --all
-                      git reset --hard origin/main
-                      ./scripts/restart.sh
-                  "
+                  curl -s http://homelab:5001/tasks/run/deploy
+                  for i in {1..60}; do
+                    echo "Polling server - attempt $i/60"
+                    RESP=$(curl -s http://homelab:5001/maintenance/status)
+                    VERSION=$(echo $RESP | jq -r .version)
+                    STATUS=$(echo $RESP | jq -r .status)
+
+                    if [ "$VERSION" = "$EXPECTED_SHA" ] && [ "$STATUS" = "success" ]; then
+                        echo "Deploy succeeded"
+                        exit 0
+                    fi
+
+                    sleep 5
+                  done
+
+                  echo "Deploy failed - timed out"
+                  echo "Status: $STATUS"
+                  echo "Commit SHA: $VERSION, Expected: $EXPECTED_SHA"
+                  exit 1

@@ -11,7 +11,17 @@
 
 import sys
 import os
+import requests
+from sseclient import SSEClient
 
-print("Python task endpoint")
-print(os.getenv("YEAR"))
-print('{ "complete": 1, "code": 0 }')
+task = sys.argv[1]
+url = f"http://localhost:5001/tasks/run/{task}"
+messages = SSEClient(url)
+
+for msg in messages:
+    print(f"[{msg.event}] {msg.data}")
+
+    if msg.event == "done":
+        result = {"complete": 1, "code": {msg.data}}
+        print(str(result))
+        break

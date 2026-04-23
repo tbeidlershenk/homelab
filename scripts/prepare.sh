@@ -114,7 +114,7 @@ fi
 "$HOMEAPI_VENV_DIR/bin/pip" install --upgrade pip
 "$HOMEAPI_VENV_DIR/bin/pip" install -r "$BASE_DIR/homeapi/requirements.txt"
 systemctl enable --now homeapi
-systemctl restart homeapi
+# systemctl restart homeapi
 log "HomeAPI service running."
 
 # Enable Cloudflared service
