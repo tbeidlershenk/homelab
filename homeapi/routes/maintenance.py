@@ -55,6 +55,10 @@ async def restart():
         stdout, stderr = await process.communicate()
         return Response(stdout, mimetype='text/plain'), 500
 
+@maintenance.route('/run_task/<script_name>', methods=['GET'])
+async def run_task(script_name: str):
+    script_path = os.path.join(scripts_dir, f"{script_name}.sh")
+
 # @maintenance.route('/update_registry', methods=['GET'])
 # def update_registry():
 #     script_path = os.path.join(scripts_dir, 'update_registry.sh')
