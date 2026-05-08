@@ -69,9 +69,9 @@ jobs:
                   status_code=$(curl -s -o /dev/null -w "%{http_code}" http://homelab:5001)
 
                   if [ "$status_code" -ne 200 ]; then
-                    echo "Deployment health check failed: HTTP $status_code"
-                    exit 1
+                      echo "Deployment health check failed: HTTP $status_code"
+                      exit 1
                   else
-                    echo "Deployment succeeded."
-                    exit 0
+                      echo "Deployment succeeded."
+                      exit 0
                   fi
