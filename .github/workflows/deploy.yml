@@ -65,7 +65,7 @@ jobs:
                   sleep 60
 
             - name: Check server health
-            - run: |
+              run: |
                   status_code=$(curl -s -o /dev/null -w "%{http_code}" http://homelab:5001)
 
                   if [ "$status_code" -ne 200 ]; then
