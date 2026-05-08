@@ -57,7 +57,7 @@ jobs:
 
             - name: Deploy to server
               run: |
-                  curl -s http://homelab:5001/tasks/run/deploy
+                  curl -s http://homelab:5001/tasks/run_unattended/deploy
 
             - name: Wait for heartbeat
               run: |
