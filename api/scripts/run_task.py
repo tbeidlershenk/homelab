@@ -12,6 +12,7 @@
 import sys
 import os
 import requests
+import json
 from sseclient import SSEClient
 
 task = sys.argv[1]
@@ -19,9 +20,9 @@ url = f"http://localhost:5001/tasks/run/{task}"
 messages = SSEClient(url)
 
 for msg in messages:
-    print(f"[{msg.event}] {msg.data}")
-
     if msg.event == "done":
-        result = {"complete": 1, "code": {msg.data}}
-        print(str(result))
+        resp = {"complete": 1, "code": int(msg.data)}
+        print(json.dumps(resp))
         break
+
+    print(f"[{msg.event}] {msg.data}")

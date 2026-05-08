@@ -103,7 +103,7 @@ else
     log "Tailscale daemon running." 
 fi
 
-# Enable Homelab API service
+# Enable API service
 API_VENV_DIR="$BASE_DIR/api/venv"
 if [ ! -d "$API_VENV_DIR" ]; then
     python3 -m venv "$API_VENV_DIR"

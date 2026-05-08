@@ -1,16 +1,16 @@
 [Unit]
-Description=HomeAPI Flask App
+Description=Homelab API server
 After=network.target
 
 [Service]
 User=root
 Group=root
-ExecStart=/etc/homelab/homeapi_start.sh
+ExecStart=/etc/homelab/api_start.sh
 Restart=always
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=homeapi
+SyslogIdentifier=api
 
 [Install]
 WantedBy=multi-user.target
