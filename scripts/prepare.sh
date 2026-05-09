@@ -86,6 +86,9 @@ chmod +x /etc/homelab/tailscaled_start.sh
 systemctl daemon-reload
 log "Setup custom systemd services."
 
+chown -R $HOMELAB_USER:$HOMELAB_USER $DATA_DIR
+log "Set docker volume permissions."
+
 # Enable Tailscale service
 if [ $ENVIRONMENT == "stage" ]; then
     log "Skipping Tailscale up command in $ENVIRONMENT environment."

@@ -25,4 +25,4 @@ for msg in messages:
         print(json.dumps(resp))
         break
 
-    print(f"[{msg.event}] {msg.data}")
+    print(f"{msg.data}")
