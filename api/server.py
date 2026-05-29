@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import subprocess
 from routes.tasks import tasks
 import json
+from logger import logger
 
 server = Flask(__name__)
 

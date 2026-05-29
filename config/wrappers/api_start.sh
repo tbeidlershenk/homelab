@@ -12,4 +12,5 @@ exec "$BASE_DIR/api/venv/bin/gunicorn" \
     --bind 0.0.0.0:5001 \
     --timeout 0 \
     --keep-alive 60 \
+    --log-level=debug \
     wsgi:server
