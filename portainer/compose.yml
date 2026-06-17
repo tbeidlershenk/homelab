@@ -9,6 +9,6 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${DATA_DIR}/portainer:/data
         ports:
-            - "9443:9443"
+            - "4000:9443"
         env_file:
             - /etc/homelab/.env
