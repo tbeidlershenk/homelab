@@ -5,9 +5,9 @@ script_context=$(dirname "${BASH_SOURCE[0]}")
 source "$script_context/doppler-get.sh"
 sudo "$script_context/doppler-save.sh"
 
-# ensure portainer is running
-docker compose -f $BASE_DIR/portainer/compose.yml up -d
-echo "Started Portainer service."
+# ensure Dockhand is running
+docker compose -f $BASE_DIR/dockhand/compose.yml up -d
+echo "Started Dockhand service."
 
 # restart all other containers
 docker ps -q | xargs -r docker restart
