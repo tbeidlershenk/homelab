@@ -31,6 +31,10 @@ mkdir -p /etc/homelab
 mkdir -p $DATA_DIR/tailscale
 log "Created necessary directories." 
 
+# Give non-root user access to all directories
+sudo setfacl -Rm u:$HOMELAB_USER:rwX $BASE_DIR
+sudo setfacl -Rdm u:$HOMELAB_USER:rwX $BASE_DIR
+
 # Ensure execute permissions
 chmod +x $BASE_DIR/scripts/*
 log "Set execute permissions on scripts/*." 
