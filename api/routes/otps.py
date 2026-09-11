@@ -8,7 +8,7 @@ import sys
 from wakeonlan import wake
 from time import sleep
 
-tasks = Blueprint("tasks", __name__)
+otps = Blueprint("otps", __name__)
 
 macos_hostname = os.getenv("MACOS_HOSTNAME")
 macos_mac_address = os.getenv("MACOS_MAC_ADDRESS")
@@ -26,7 +26,7 @@ if macos_port is None:
 
 macos_url = f'http://{macos_hostname}:{macos_port}'
 
-@tasks.route("/get", methods=["GET"])
+@otps.route("/get", methods=["GET"])
 async def get():
     # send WOL packet
     wake(macos_mac_address)

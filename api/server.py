@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from dotenv import load_dotenv
 import subprocess
 from routes.tasks import tasks
+from routes.otps import otps
 import json
 from logger import logger
 
@@ -10,7 +11,7 @@ server = Flask(__name__)
 load_dotenv()
 
 server.register_blueprint(tasks, url_prefix="/tasks")
-server.register_blueprint(tasks, url_prefix="/otps")
+server.register_blueprint(otps, url_prefix="/otps")
 server.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 
 
