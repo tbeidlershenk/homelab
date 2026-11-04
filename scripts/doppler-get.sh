@@ -14,13 +14,22 @@ fi
 # Inject secrets into environment
 echo "Environment: $DOPPLER_CONFIG"
 echo "Downloading secrets from PROJECT: $DOPPLER_PROJECT, CONFIG: $DOPPLER_CONFIG..."
-eval "$(doppler secrets download \
+# Download as JSON and have Python emit shell-quoted assignments, so secret
+# values are treated as data and never executed (no $(...) / backtick expansion).
+secrets_json="$(doppler secrets download \
     --token "$DOPPLER_TOKEN" \
     --project "$DOPPLER_PROJECT" \
     --config "$DOPPLER_CONFIG" \
     --no-file \
-    --format env \
-    | sed 's/^/export /')"
+    --format json)" || { echo "Error: failed to download secrets from Doppler."; exit 1; }
+secrets_sh="$(python3 -c '
+import json, re, shlex, sys
+for k, v in json.load(sys.stdin).items():
+    if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", k):
+        print(f"export {k}={shlex.quote(str(v))}")
+' <<< "$secrets_json")" || { echo "Error: failed to parse Doppler secrets."; exit 1; }
+eval "$secrets_sh"
+unset secrets_json secrets_sh
 echo "Injected secrets into environment."
 
 # Verify required environment variables are set
@@ -33,7 +42,7 @@ echo "Injected secrets into environment."
 [ -z "$HOSTNAME" ] && echo "Error: HOSTNAME is not set" && exit 1
 [ -z "$REPO" ] && echo "Error: REPO is not set" && exit 1 
 [ -z "$EMAIL" ] && echo "Error: EMAIL is not set" && exit 1 
-[ -z "$HOMELAB_USER" ] && echo "Error: USER is not set" && exit 1
+[ -z "$HOMELAB_USER" ] && echo "Error: HOMELAB_USER is not set" && exit 1
 
 set -a
 

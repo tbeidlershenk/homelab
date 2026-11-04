@@ -3,7 +3,7 @@ set -e
 
 set -a
 source /etc/homelab/.env
-set -a
+set +a
 
 cd "$BASE_DIR/api"
 exec "$BASE_DIR/api/venv/bin/gunicorn" \

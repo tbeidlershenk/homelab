@@ -3,7 +3,7 @@ set -e
 
 set -a
 source /etc/homelab/.env
-set -a
+set +a
 
 
 

@@ -55,14 +55,13 @@ fi
 # Set Git config
 git config --global user.email "tbeidlershenk@gmail.com"
 git config --global user.name "Tobias Beidler-Shenk"
-git config --global user.token $GITHUB_PAT
-log "Set global Git config." 
+# The PAT used to be stored here in plaintext; gh auth already holds it.
+git config --global --unset-all user.token || true
+log "Set global Git config."
 
-# Set SSH secrets (prod only)
+# Set CI secrets (prod only). Only what the deploy workflow actually uses —
+# the server's SSH private key is deliberately NOT uploaded.
 if [ $ENVIRONMENT == "prod" ]; then
-    gh secret set SSH_PRIVATE_KEY -b @"$SSH_PRIVATE_KEY" --repo "$REPO"
-    gh secret set SSH_USER -b "$HOMELAB_USER" --repo "$REPO"
-    gh secret set SSH_HOST -b "$HOSTNAME" --repo "$REPO"
     gh secret set TAILSCALE_CI_AUTHKEY -b "$TAILSCALE_CI_AUTHKEY" --repo "$REPO"
     log "Updated GitHub secrets for repository $REPO." 
 else

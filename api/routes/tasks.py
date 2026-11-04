@@ -1,12 +1,8 @@
-import json
-from flask import Blueprint, Response, jsonify, request
-from dotenv import load_dotenv
+from flask import Blueprint, Response, abort, jsonify
 from logger import logger
 import os
+import re
 import sys
-import subprocess
-import jsonschema
-import asyncio
 import subprocess
 import selectors
 import traceback
@@ -15,22 +11,38 @@ import signal
 tasks = Blueprint("tasks", __name__)
 
 base_dir = os.getenv("BASE_DIR")
-if not os.path.exists(base_dir):
+if not base_dir or not os.path.isdir(base_dir):
     print("BASE_DIR not defined or does not exist.")
     sys.exit(1)
 
-scripts_dir = base_dir + "/scripts"
+scripts_dir = os.path.realpath(os.path.join(base_dir, "scripts"))
+
+# Script names are plain identifiers: no slashes, dots, or shell metacharacters.
+SCRIPT_NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
-def stream_process(cmd):
+def resolve_script(script_name: str) -> str:
+    """Map a URL script name to scripts/<name>.sh, or abort with 404.
+
+    Rejects anything that isn't a plain name and anything whose resolved
+    path (after following symlinks) lands outside scripts_dir.
+    """
+    if not SCRIPT_NAME_RE.fullmatch(script_name):
+        abort(404)
+    path = os.path.realpath(os.path.join(scripts_dir, f"{script_name}.sh"))
+    if os.path.dirname(path) != scripts_dir or not os.path.isfile(path):
+        abort(404)
+    return path
+
+
+def stream_process(script_path: str):
     process = subprocess.Popen(
-        cmd,
-        shell=True,
+        ["bash", script_path],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
         bufsize=1,
-        preexec_fn=os.setsid,
+        start_new_session=True,
     )
 
     try:
@@ -87,7 +99,7 @@ def stream_process(cmd):
 
 @tasks.route("/run/<script_name>", methods=["GET"])
 async def run_task(script_name: str):
-    script_path = os.path.join(scripts_dir, f"{script_name}.sh")
+    script_path = resolve_script(script_name)
     return Response(
         stream_process(script_path),
         mimetype="text/event-stream",
@@ -100,7 +112,7 @@ async def run_task(script_name: str):
 
 @tasks.route("/run_unattended/<script_name>", methods=["GET"])
 async def run_task_unattended(script_name: str):
-    script_path = os.path.join(scripts_dir, f"{script_name}.sh")
+    script_path = resolve_script(script_name)
     process = subprocess.Popen(
         ["bash", script_path],
         stdout=subprocess.DEVNULL,
