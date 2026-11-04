@@ -17,7 +17,7 @@ The architecture migration plan and its status. **Update the status table whenev
 |---|---|---|
 | 0 | Security quick fixes (task-name validation, secrets loading/permissions, PAT, CI secrets) | ✅ PR `phase0-security` |
 | 1 | Ansible for the host | 🟡 core done on `phase1-ansible` (stacked on Phase 0); follow-ups below |
-| 1b | Dev environment (Multipass VM) | ⏳ next, after Phase 1 merges |
+| 1b | Dev environment (Multipass VM) | 🟡 manual bootstrap test first — `docs/DEV-VM.md` |
 | 2 | Pull-based deploys (`ansible-pull` timer), retire the CI → API deploy | ⏳ |
 | 3 | API: non-root, tailnet/LAN firewall, token auth, task allowlist | ⏳ |
 | 4 | Schedules as code: systemd timers replace Cronicle, `OnFailure` → ntfy | ⏳ |
@@ -52,6 +52,7 @@ The architecture migration plan and its status. **Update the status table whenev
 - The first prod run, after merge: `cd $BASE_DIR && git pull && sudo ./scripts/prepare.sh --check --diff` to review, then `sudo ./scripts/prepare.sh`. Expect changes to repo files (Tailscale/cloudflared move to deb822) and an API restart.
 
 ## Phase 1b — Dev environment (after Phase 1 merges)
+- **First step (in progress):** a manual bootstrap test on a fresh Multipass VM, following `docs/DEV-VM.md`. It doubles as Phase 1's first real run.
 - **Where:** a Multipass VM (`homelab-dev`, Ubuntu LTS), defined in `dev/cloud-init.yaml` and driven by `dev/Makefile`: `dev-up`, `dev-apply`, `dev-check`, `dev-destroy`.
 - **How:** mount the repo into the VM and run the same playbook with `ENVIRONMENT=dev`. `vars/dev.yml` already disables GitHub setup and cloudflared.
 - **Secrets:** a separate Doppler `dev` config with its own ephemeral Tailscale key (`tag:dev`) and no prod credentials.
