@@ -1,0 +1,46 @@
+# Fixes A1: the API restarts whenever its code, dependencies, unit or secrets
+# change, and only then.
+- name: API virtualenv with pinned requirements
+  ansible.builtin.pip:
+    requirements: "{{ base_dir }}/api/requirements.txt"
+    virtualenv: "{{ base_dir }}/api/venv"
+    virtualenv_command: python3 -m venv
+  notify: Restart api
+
+- name: API unit and wrapper
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: "{{ repo_root }}/config/api.service", dest: /etc/systemd/system/api.service, mode: "0644" }
+    - { src: "{{ repo_root }}/config/wrappers/api_start.sh", dest: "{{ etc_dir }}/api_start.sh", mode: "0755" }
+  notify: Restart api
+
+# gunicorn loads the code once at start, so track a hash of the API source and
+# restart when it moves.
+- name: Fingerprint of the API source
+  ansible.builtin.shell: |
+    set -o pipefail
+    cd {{ base_dir | quote }}/api
+    new=$(find . -path ./venv -prune -o -name '*.py' -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+    old=$(cat {{ etc_dir }}/api.source.sha256 2>/dev/null || true)
+    if [ "$new" != "$old" ]; then echo "$new" > {{ etc_dir }}/api.source.sha256; echo changed; fi
+  args:
+    executable: /bin/bash
+  register: api_source
+  changed_when: "'changed' in api_source.stdout"
+  notify: Restart api
+
+- name: Restart the API if secrets changed
+  ansible.builtin.debug:
+    msg: Secrets changed; the API will restart.
+  changed_when: secrets_changed | bool
+  notify: Restart api
+
+- name: API running
+  ansible.builtin.systemd_service:
+    name: api
+    enabled: true
+    state: started
+    daemon_reload: true

@@ -1,0 +1,5 @@
+# Single host, configured locally (bootstrap/prepare run on the box itself).
+all:
+  hosts:
+    homelab:
+      ansible_connection: local

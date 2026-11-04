@@ -1,0 +1,25 @@
+# Declares the whole homelab host. Run via scripts/prepare.sh (or bootstrap.sh),
+# which loads Doppler secrets into the environment first.
+- name: Homelab host
+  hosts: homelab
+  pre_tasks:
+    - name: Load environment settings for {{ homelab_env }}
+      ansible.builtin.include_vars: "vars/{{ homelab_env }}.yml"
+
+    - name: Required settings are present
+      ansible.builtin.assert:
+        that:
+          - base_dir | length > 0
+          - data_dir | length > 0
+          - backup_dir | length > 0
+          - homelab_user | length > 0
+        fail_msg: BASE_DIR, DATA_DIR, BACKUP_DIR and HOMELAB_USER must come from Doppler (source scripts/doppler-get.sh).
+  roles:
+    - base
+    - docker
+    - github
+    - secrets
+    - tailscale
+    - cloudflared
+    - api
+    - dockhand

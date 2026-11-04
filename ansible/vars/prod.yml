@@ -1,0 +1,5 @@
+github_setup: true          # gh auth + register this host's SSH key
+github_ci_secrets: true     # push CI secrets to the repo
+tailscale_up: true
+cloudflared_enabled: true
+filen_enabled: true
