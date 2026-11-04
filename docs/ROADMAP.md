@@ -8,7 +8,7 @@ The architecture migration plan and its status. **Update the status table whenev
 2. **The host layer is Ansible** (`ansible/`). The one-command bootstrap from a fresh machine must keep working: `sudo ./bootstrap.sh`.
 3. **Doppler stays the secrets and settings store.** The playbook reads everything from the environment that `scripts/doppler-get.sh` loads.
 4. **Dev environment comes after the Ansible migration** (Phase 1b). It runs as a Multipass VM, built by the same playbook with `env=dev`.
-5. **Detailed security findings stay out of git.** They're tracked locally in `docs/issues/` (gitignored). This file holds only phases, decisions and status.
+5. **Small fixes are tracked in `docs/issues/tweaks.md`** (committed). The detailed architecture analysis, `docs/issues/architecture.md`, stays local and gitignored. This file holds phases, decisions and status.
 6. **Use built-in Ansible modules only** (`ansible.builtin.*`), so the host needs nothing beyond `ansible-core` from apt. CI enforces `ansible-lint` (production profile) and a second, no-change run (idempotence).
 
 ## Status
