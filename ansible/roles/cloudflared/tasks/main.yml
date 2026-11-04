@@ -1,0 +1,40 @@
+- name: Cloudflare Tunnel
+  when: cloudflared_enabled
+  block:
+    - name: Cloudflare apt repository
+      ansible.builtin.deb822_repository:
+        name: cloudflared
+        types: deb
+        uris: https://pkg.cloudflare.com/cloudflared
+        suites: any
+        components: main
+        signed_by: https://pkg.cloudflare.com/cloudflare-main.gpg
+
+    - name: Cloudflared package
+      ansible.builtin.apt:
+        name: cloudflared
+        state: present
+        update_cache: true
+
+    - name: Cloudflared unit and wrapper
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { src: "{{ repo_root }}/config/cloudflared.service", dest: /etc/systemd/system/cloudflared.service, mode: "0644" }
+        - { src: "{{ repo_root }}/config/wrappers/cloudflared_start.sh", dest: "{{ etc_dir }}/cloudflared_start.sh", mode: "0755" }
+      notify: Restart cloudflared
+
+    - name: Cloudflared running
+      ansible.builtin.systemd_service:
+        name: cloudflared
+        enabled: true
+        state: started
+        daemon_reload: true
+
+    - name: Restart cloudflared if secrets changed
+      ansible.builtin.debug:
+        msg: Secrets changed; cloudflared will restart.
+      changed_when: secrets_changed | bool
+      notify: Restart cloudflared

@@ -1,0 +1,8 @@
+# If this play was started by the API itself (CI → /tasks/run_unattended/deploy),
+# restarting the API would kill the play. scripts/deploy.sh avoids that by
+# re-launching itself in its own transient systemd unit first.
+- name: Restart api
+  ansible.builtin.systemd_service:
+    name: api
+    state: restarted
+    daemon_reload: true
