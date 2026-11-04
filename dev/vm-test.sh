@@ -94,7 +94,7 @@ check "deb822 repos"          "ls /etc/apt/sources.list.d/ | tr '\n' ' '"       
 check "tailnet name has no -N suffix" \
     "tailscale status --json | python3 -c 'import json,sys; print(json.load(sys.stdin)[\"Self\"][\"DNSName\"])'" \
     "^${EXPECT_TS_NAME}\."
-check "DNS works with Tailscale up" "getent hosts pkgs.tailscale.com"                      '[0-9a-f.:]+ +pkgs\.tailscale\.com'
+check "DNS works with Tailscale up" "getent hosts pkgs.tailscale.com"                      '^[0-9a-f.:]+[[:space:]]+.*pkgs\.tailscale\.com'
 
 echo "== 4. Restart-on-change"
 vm "echo '# vm-test' >> api/server.py"
