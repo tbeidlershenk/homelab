@@ -36,5 +36,6 @@
     - name: Restart cloudflared if secrets changed
       ansible.builtin.debug:
         msg: Secrets changed; cloudflared will restart.
+      when: secrets_changed | bool
       changed_when: secrets_changed | bool
       notify: Restart cloudflared

@@ -35,6 +35,7 @@
 - name: Restart the API if secrets changed
   ansible.builtin.debug:
     msg: Secrets changed; the API will restart.
+  when: secrets_changed | bool
   changed_when: secrets_changed | bool
   notify: Restart api
 
