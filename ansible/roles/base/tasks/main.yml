@@ -16,7 +16,8 @@
     - { path: "{{ logs_dir }}", mode: "0775" }
     - { path: "{{ backup_dir }}" }
     - { path: "{{ data_dir }}" }
-    - { path: "{{ data_dir }}/tailscale" }
+    # tailscaled resets its state dir (node private key) to 0700 on start.
+    - { path: "{{ data_dir }}/tailscale", mode: "0700" }
     - { path: "{{ etc_dir }}" }
 
 # Give the non-root user access to the checkout. Unlike the old prepare.sh this
