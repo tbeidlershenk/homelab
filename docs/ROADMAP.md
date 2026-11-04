@@ -14,6 +14,7 @@ The architecture migration plan and its status. **Update the status table whenev
 ## Status
 
 > **Merge freeze:** nothing else merges to `main` until `phase1-ansible` passes the dev-VM bootstrap test (`docs/DEV-VM.md`). Every push to `main` deploys to the live server.
+> **Update (2026-11-04):** the automated test (`dev/vm-test.sh`, `docs/VM-TEST.md`) passed end to end on commit `543a559` — ALL CHECKS PASSED, including a from-nothing destroy/relaunch. Lifting the freeze and merging is the owner's call.
 
 | Phase | What | Status |
 |---|---|---|
@@ -45,7 +46,8 @@ The architecture migration plan and its status. **Update the status table whenev
 - [x] First real run: dev VM (arm64, Ubuntu 24.04.5) on 2026-11-04 with `-e tailscale_up=false`. Bootstrap, then `changed=0` on re-run; API, Dockhand, `.env` 0600, Phase 0 404 checks and API restart-on-change all pass. Fixes: `c52eda6` (`| bool` on env toggles), `a9042a6` (`logs/` mode vs. ACL mask).
 - [ ] Still to watch: the PR's CI job, then the first prod run after merge (see "Rollout" below).
 - [x] Dev VM with a real `tag:dev` Tailscale key (2026-11-04): joins with `tag:dev`, re-run `changed=0`. Fix: `2be4214` (secrets-changed notes no longer print on every run).
-- [ ] Destroy/relaunch the dev VM and repeat from nothing (DEV-VM.md step 6).
+- [x] Destroy/relaunch the dev VM and repeat from nothing (DEV-VM.md step 6): ran unattended via `dev/vm-test.sh` on 2026-11-04 (arm64 host, Ubuntu 24.04.5 VM). First pass found one test-script bug, fixed and pushed, then a clean re-run gave **ALL CHECKS PASSED** on commit `543a559`: bootstrap, `changed=0` idempotence, all 12 host checks (including DNS with Tailscale up), and restart-on-change (API restarts only on a code change, settles back to `changed=0`). Fix: `543a559` (`getent hosts` prints a CNAME chain for `pkgs.tailscale.com` — via CloudFront — so the DNS check's regex needed to allow text between the IP and the hostname, not just whitespace).
+- [ ] `multipass exec` against the test VM intermittently hung for several minutes on a single check (`systemctl is-active cloudflared`), with no concurrent multipass usage — recovered by killing the stuck client-side process, after which the script's own `|| true` let it continue with truncated-but-matching output. Seen on both attempts of this run. Looks like a Multipass 1.16.4 client flake, not an issue in the playbook; if it recurs, consider a per-check timeout in `vm-test.sh` (e.g. `timeout 30 multipass exec ...`) so the script can't hang unattended.
 - [ ] Tailnet DNS depended on prod: the only global resolver was a container on `homelab` (`100.106.120.126`), so with prod down every tailnet device lost DNS, including a fresh bootstrap. "Override DNS servers" is now off as a stopgap. Before turning it back on, add a public fallback resolver; this matters for the DR drill (Phase 9).
 - [ ] Doppler's apt repo is still a `.list` written by `install.sh`; consider deb822 for consistency (it runs before Ansible, so low priority).
 - [ ] Move state to `/srv/homelab/{data,backups,logs}`. Needs a one-time data move with services stopped, plus a Doppler `DATA_DIR`/`BACKUP_DIR` update. Owner-driven.
@@ -59,7 +61,7 @@ The architecture migration plan and its status. **Update the status table whenev
 - The first prod run, after merge: `cd $BASE_DIR && git pull && sudo ./scripts/prepare.sh --check --diff` to review, then `sudo ./scripts/prepare.sh`. Expect changes to repo files (Tailscale/cloudflared move to deb822) and an API restart.
 
 ## Phase 1b — Dev environment (after Phase 1 merges)
-- **First step (in progress):** a manual bootstrap test on a fresh Multipass VM, following `docs/DEV-VM.md`. It doubles as Phase 1's first real run.
+- **First step (done, 2026-11-04):** the bootstrap test now runs unattended (`dev/vm-test.sh`, `docs/VM-TEST.md`) and passed end to end on commit `543a559`. It doubled as Phase 1's first real run and its from-nothing repeat.
 - **Where:** a Multipass VM (`homelab-dev`, Ubuntu LTS), defined in `dev/cloud-init.yaml` and driven by `dev/Makefile`: `dev-up`, `dev-apply`, `dev-check`, `dev-destroy`.
 - **How:** mount the repo into the VM and run the same playbook with `ENVIRONMENT=dev`. `vars/dev.yml` already disables GitHub setup and cloudflared.
 - **Secrets:** a separate Doppler `dev` config with its own ephemeral Tailscale key (`tag:dev`) and no prod credentials.
