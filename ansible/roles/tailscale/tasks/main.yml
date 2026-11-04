@@ -31,6 +31,9 @@
     - { src: "{{ repo_root }}/config/wrappers/tailscaled_start.sh", dest: "{{ etc_dir }}/tailscaled_start.sh", mode: "0755" }
   notify: Restart tailscaled
 
+- name: Switch to our tailscaled unit before checking login state
+  ansible.builtin.meta: flush_handlers
+
 - name: Tailscaled running
   ansible.builtin.systemd_service:
     name: tailscaled
