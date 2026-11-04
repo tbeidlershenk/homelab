@@ -7,15 +7,17 @@
 
 - name: Homelab directories
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
     state: directory
-    mode: "0755"
+    mode: "{{ item.mode | default('0755') }}"
   loop:
-    - "{{ logs_dir }}"
-    - "{{ backup_dir }}"
-    - "{{ data_dir }}"
-    - "{{ data_dir }}/tailscale"
-    - "{{ etc_dir }}"
+    # logs/ is inside the checkout, so the ACL task below gives it a rwx mask,
+    # which shows as group bits; 0755 here would fight that on every run.
+    - { path: "{{ logs_dir }}", mode: "0775" }
+    - { path: "{{ backup_dir }}" }
+    - { path: "{{ data_dir }}" }
+    - { path: "{{ data_dir }}/tailscale" }
+    - { path: "{{ etc_dir }}" }
 
 # Give the non-root user access to the checkout. Unlike the old prepare.sh this
 # no longer recurses into data/ and backup/ on every run: live container volumes
