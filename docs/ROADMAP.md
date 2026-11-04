@@ -13,9 +13,11 @@ The architecture migration plan and its status. **Update the status table whenev
 
 ## Status
 
+> **Merge freeze:** nothing else merges to `main` until `phase1-ansible` passes the dev-VM bootstrap test (`docs/DEV-VM.md`). Every push to `main` deploys to the live server.
+
 | Phase | What | Status |
 |---|---|---|
-| 0 | Security quick fixes (task-name validation, secrets loading/permissions, PAT, CI secrets) | ✅ PR `phase0-security` |
+| 0 | Security quick fixes (task-name validation, secrets loading/permissions, PAT, CI secrets) | ✅ on `main` (squash-merged as PR #5, `be547cc`) |
 | 1 | Ansible for the host | 🟡 core done on `phase1-ansible` (stacked on Phase 0); follow-ups below |
 | 1b | Dev environment (Multipass VM) | 🟡 manual bootstrap test first — `docs/DEV-VM.md` |
 | 2 | Pull-based deploys (`ansible-pull` timer), retire the CI → API deploy | ⏳ |

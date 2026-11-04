@@ -109,6 +109,7 @@ claude                  # from ~/homelab; first message: "Read docs/DEV-VM.md Pa
 - Pushing needs the owner's GitHub credentials. Commit locally and ask the owner to push, or ask before setting up `gh auth`. **Don't** use the prod `GITHUB_PAT`.
 
 ### Don't
+- Merge anything to `main`, or ask to. There's a merge freeze until this test passes; the owner merges.
 - Touch prod, its Doppler `prod` config, or GitHub repo secrets.
 - Commit `.env`, logs, or anything under `data/` or `backup/`.
 - Reorganize roles or start later phases. This session is about making Phase 1 run cleanly and repeatably.
