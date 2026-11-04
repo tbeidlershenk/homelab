@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **`docs/ROADMAP.md`** is the migration plan: settled decisions, phase status, and what's next. Read it before proposing architectural changes, and update its status table when a phase moves.
 - **Settled decisions** (details in the roadmap): Dockhand stays the source of truth for services; the host is managed by Ansible; Doppler holds secrets; the dev VM comes after the Ansible migration.
+- **On the Multipass dev VM?** Follow `docs/DEV-VM.md` Part B.
 - `docs/issues/` (gitignored, may be absent on a new machine) holds detailed security notes. Don't commit it.
 
 ## What this repo is
