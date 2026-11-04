@@ -15,6 +15,11 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v3
 
+            - name: Lint Ansible
+              run: |
+                  pipx install ansible-lint || pip install --user ansible-lint
+                  cd ansible && ansible-lint -p site.yml roles
+
             - name: Run Install Script
               working-directory: ${{ github.workspace }}
               env:
@@ -32,6 +37,19 @@ jobs:
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
               run: |
                   sudo -E ./scripts/prepare.sh
+
+            - name: Re-run Prepare Script (must report no changes)
+              working-directory: ${{ github.workspace }}
+              env:
+                  DOPPLER_PROJECT: ${{ secrets.DOPPLER_PROJECT }}
+                  DOPPLER_CONFIG: ${{ secrets.DOPPLER_CONFIG }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+              run: |
+                  sudo -E ./scripts/prepare.sh | tee second-run.log
+                  if ! grep -Eq 'homelab +: .*changed=0 ' second-run.log; then
+                      echo "::error::Second Ansible run changed something; a task is not idempotent."
+                      exit 1
+                  fi
 
             - name: Run Backup Script
               working-directory: ${{ github.workspace }}

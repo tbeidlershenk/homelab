@@ -1,0 +1,6 @@
+# "stage" is the GitHub Actions runner used to test PRs.
+github_setup: false
+github_ci_secrets: false
+tailscale_up: false
+cloudflared_enabled: false
+filen_enabled: true
