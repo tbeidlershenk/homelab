@@ -42,7 +42,10 @@ The architecture migration plan and its status. **Update the status table whenev
 - CI: `ansible-lint`, then install → prepare → **prepare again (it must report `changed=0`)** → backup.
 
 **Phase 1 follow-ups (not yet done):**
-- [ ] First real run: watch the PR's CI job, then the first prod run after merge (see "Rollout" below).
+- [x] First real run: dev VM (arm64, Ubuntu 24.04.5) on 2026-11-04 with `-e tailscale_up=false`. Bootstrap, then `changed=0` on re-run; API, Dockhand, `.env` 0600, Phase 0 404 checks and API restart-on-change all pass. Fixes: `c52eda6` (`| bool` on env toggles), `a9042a6` (`logs/` mode vs. ACL mask).
+- [ ] Still to watch: the PR's CI job, then the first prod run after merge (see "Rollout" below).
+- [ ] Dev VM with a real `tag:dev` Tailscale key: exercise the `tailscale up` path, then destroy/relaunch and repeat from nothing (DEV-VM.md step 6).
+- [ ] Doppler's apt repo is still a `.list` written by `install.sh`; consider deb822 for consistency (it runs before Ansible, so low priority).
 - [ ] Move state to `/srv/homelab/{data,backups,logs}`. Needs a one-time data move with services stopped, plus a Doppler `DATA_DIR`/`BACKUP_DIR` update. Owner-driven.
 - [ ] Per-service env files (0600) with only each service's variables, replacing the single `/etc/homelab/.env`.
 - [ ] Pin package versions in vars (pairs with Renovate in Phase 8).
