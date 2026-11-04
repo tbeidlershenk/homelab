@@ -7,7 +7,5 @@ logs
 venv
 __pycache__
 .DS_Store
-docs/issues/*
-!docs/issues/tweaks.md
 .claude/settings.local.json
 .claude/worktrees

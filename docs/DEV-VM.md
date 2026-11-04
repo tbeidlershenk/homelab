@@ -62,7 +62,7 @@ claude                  # from ~/homelab; first message: "Read docs/DEV-VM.md Pa
 
 ## Part B — Brief for the Claude session in the VM
 
-**Read first:** `CLAUDE.md`, then `docs/ROADMAP.md` (decisions and status). `docs/issues/tweaks.md` lists small fixes and their status. `docs/issues/architecture.md` is local-only and won't exist here; that's expected.
+**Read first:** `CLAUDE.md`, then `docs/ROADMAP.md` (decisions and status). For background, `docs/issues/architecture.md` explains the problems each phase fixes, and `docs/issues/tweaks.md` lists small fixes and their status.
 
 ### Context
 - **You're on a disposable Multipass VM** (`ENVIRONMENT=dev`, user `ubuntu`, repo at `~/homelab` = `BASE_DIR`), not the prod server. The prod server is currently down, and nothing here touches it.
