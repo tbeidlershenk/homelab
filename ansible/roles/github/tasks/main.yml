@@ -1,5 +1,5 @@
 - name: GitHub access for this host
-  when: github_setup
+  when: github_setup | bool
   block:
     - name: SSH key for root
       ansible.builtin.command: ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519 -N ""
@@ -49,4 +49,4 @@
     stdin: "{{ tailscale_ci_authkey }}"
   no_log: true
   changed_when: false
-  when: github_ci_secrets
+  when: github_ci_secrets | bool

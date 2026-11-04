@@ -57,4 +57,4 @@
     executable: /bin/bash
   register: base_filen_install
   changed_when: "'present' not in base_filen_install.stdout"
-  when: filen_enabled
+  when: filen_enabled | bool

@@ -1,5 +1,5 @@
 - name: Cloudflare Tunnel
-  when: cloudflared_enabled
+  when: cloudflared_enabled | bool
   block:
     - name: Cloudflare apt repository
       ansible.builtin.deb822_repository:

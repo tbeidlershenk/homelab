@@ -39,7 +39,7 @@
     daemon_reload: true
 
 - name: Join the tailnet
-  when: tailscale_up
+  when: tailscale_up | bool
   block:
     - name: Current Tailscale state
       ansible.builtin.command: tailscale status
