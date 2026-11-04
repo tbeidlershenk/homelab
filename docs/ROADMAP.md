@@ -44,7 +44,9 @@ The architecture migration plan and its status. **Update the status table whenev
 **Phase 1 follow-ups (not yet done):**
 - [x] First real run: dev VM (arm64, Ubuntu 24.04.5) on 2026-11-04 with `-e tailscale_up=false`. Bootstrap, then `changed=0` on re-run; API, Dockhand, `.env` 0600, Phase 0 404 checks and API restart-on-change all pass. Fixes: `c52eda6` (`| bool` on env toggles), `a9042a6` (`logs/` mode vs. ACL mask).
 - [ ] Still to watch: the PR's CI job, then the first prod run after merge (see "Rollout" below).
-- [ ] Dev VM with a real `tag:dev` Tailscale key: exercise the `tailscale up` path, then destroy/relaunch and repeat from nothing (DEV-VM.md step 6).
+- [x] Dev VM with a real `tag:dev` Tailscale key (2026-11-04): joins with `tag:dev`, re-run `changed=0`. Fix: `2be4214` (secrets-changed notes no longer print on every run).
+- [ ] Destroy/relaunch the dev VM and repeat from nothing (DEV-VM.md step 6).
+- [ ] Tailnet DNS depended on prod: the only global resolver was a container on `homelab` (`100.106.120.126`), so with prod down every tailnet device lost DNS, including a fresh bootstrap. "Override DNS servers" is now off as a stopgap. Before turning it back on, add a public fallback resolver; this matters for the DR drill (Phase 9).
 - [ ] Doppler's apt repo is still a `.list` written by `install.sh`; consider deb822 for consistency (it runs before Ansible, so low priority).
 - [ ] Move state to `/srv/homelab/{data,backups,logs}`. Needs a one-time data move with services stopped, plus a Doppler `DATA_DIR`/`BACKUP_DIR` update. Owner-driven.
 - [ ] Per-service env files (0600) with only each service's variables, replacing the single `/etc/homelab/.env`.
