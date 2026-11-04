@@ -7,3 +7,6 @@ logs
 venv
 __pycache__
 .DS_Store
+.claude/settings.local.json
+.claude/worktrees
+vm-test-logs

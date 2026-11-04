@@ -1,0 +1,63 @@
+- name: Base packages
+  ansible.builtin.apt:
+    name: [curl, ca-certificates, git, gh, yq, acl, python3-pip, python3-venv]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Homelab directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+  loop:
+    # logs/ is inside the checkout, so the ACL task below gives it a rwx mask,
+    # which shows as group bits; 0755 here would fight that on every run.
+    - { path: "{{ logs_dir }}", mode: "0775" }
+    - { path: "{{ backup_dir }}" }
+    - { path: "{{ data_dir }}" }
+    # tailscaled resets its state dir (node private key) to 0700 on start.
+    - { path: "{{ data_dir }}/tailscale", mode: "0700" }
+    - { path: "{{ etc_dir }}" }
+
+# Give the non-root user access to the checkout. Unlike the old prepare.sh this
+# no longer recurses into data/ and backup/ on every run: live container volumes
+# keep their own permissions, and default ACLs (-d) still cover new files.
+- name: Checkout ACLs (excluding data and backups) for {{ homelab_user }}
+  ansible.builtin.shell: |
+    set -e
+    setfacl -m u:{{ homelab_user }}:rwX -m d:u:{{ homelab_user }}:rwX {{ base_dir | quote }}
+    find {{ base_dir | quote }} -mindepth 1 -maxdepth 1 \
+      ! -path {{ data_dir | quote }} ! -path {{ backup_dir | quote }} \
+      -exec setfacl -Rm u:{{ homelab_user }}:rwX -Rm d:u:{{ homelab_user }}:rwX {} +
+  changed_when: false
+
+- name: Scripts are executable
+  ansible.builtin.shell: chmod +x {{ base_dir | quote }}/scripts/*.sh
+  changed_when: false
+
+- name: Global git identity
+  ansible.builtin.shell: |
+    set -e
+    changed=0
+    [ "$(git config --global user.email || true)" = {{ git_user_email | quote }} ] ||
+      { git config --global user.email {{ git_user_email | quote }}; changed=1; }
+    [ "$(git config --global user.name || true)" = {{ git_user_name | quote }} ] ||
+      { git config --global user.name {{ git_user_name | quote }}; changed=1; }
+    # The PAT used to be stored here in plaintext; gh auth already holds it.
+    if git config --global --get user.token >/dev/null; then git config --global --unset-all user.token; changed=1; fi
+    echo "changed=$changed"
+  register: base_git_identity
+  changed_when: "'changed=1' in base_git_identity.stdout"
+
+# Filen has no apt repository; keep its installer, but only run it once.
+- name: Filen CLI
+  ansible.builtin.shell: |
+    set -o pipefail
+    command -v filen >/dev/null && echo present && exit 0
+    curl -fsSL https://filen.io/cli.sh | bash
+  args:
+    executable: /bin/bash
+  register: base_filen_install
+  changed_when: "'present' not in base_filen_install.stdout"
+  when: filen_enabled | bool

@@ -1,0 +1,8 @@
+# Dockhand remains the source of truth for service stacks; this only makes sure
+# Dockhand itself is up. Its compose file reads DATA_DIR from the environment.
+- name: Dockhand is up
+  ansible.builtin.command: docker compose -f {{ base_dir | quote }}/dockhand/compose.yml up -d
+  environment:
+    DATA_DIR: "{{ data_dir }}"
+  register: dockhand_up
+  changed_when: dockhand_up.stderr is search('Creat|Recreat|Start')

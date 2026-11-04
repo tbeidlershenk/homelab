@@ -1,0 +1,37 @@
+# Install from Docker's signed apt repo instead of get-docker.sh.
+# Hosts that already have Docker (prod, GitHub runners) are left as they are,
+# matching the old install.sh, so we never fight a pre-existing repo definition.
+- name: Check for an existing Docker install
+  ansible.builtin.command: docker --version
+  register: docker_existing
+  changed_when: false
+  failed_when: false
+
+- name: Docker apt repository
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: https://download.docker.com/linux/ubuntu
+    suites: "{{ ansible_facts.distribution_release }}"
+    components: stable
+    signed_by: https://download.docker.com/linux/ubuntu/gpg
+  when: docker_existing.rc != 0
+
+- name: Docker packages
+  ansible.builtin.apt:
+    name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+    state: present
+    update_cache: true
+  when: docker_existing.rc != 0
+
+- name: Docker daemon running
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Docker group membership for {{ homelab_user }}
+  ansible.builtin.user:
+    name: "{{ homelab_user }}"
+    groups: docker
+    append: true

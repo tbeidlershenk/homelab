@@ -1,0 +1,11 @@
+{
+    "permissions": {
+        "deny": [
+            "Read(./.env)",
+            "Read(./.env.*)",
+            "Read(./data/**)",
+            "Read(./backup/**)",
+            "Read(~/homelab-dev.env)"
+        ]
+    }
+}

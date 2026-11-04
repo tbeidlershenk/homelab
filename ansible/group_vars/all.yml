@@ -1,0 +1,21 @@
+# Values come from the environment that scripts/doppler-get.sh populates,
+# so Doppler stays the single source of truth for settings and secrets.
+homelab_env: "{{ lookup('env', 'ENVIRONMENT') | default('prod', true) }}"
+
+repo_root: "{{ playbook_dir | dirname }}"          # the checkout this playbook lives in
+base_dir: "{{ lookup('env', 'BASE_DIR') }}"        # the live checkout services run from
+data_dir: "{{ lookup('env', 'DATA_DIR') }}"
+backup_dir: "{{ lookup('env', 'BACKUP_DIR') }}"
+logs_dir: "{{ base_dir }}/logs"
+etc_dir: /etc/homelab
+
+homelab_user: "{{ lookup('env', 'HOMELAB_USER') }}"
+github_repo: "{{ lookup('env', 'REPO') }}"
+github_pat: "{{ lookup('env', 'GITHUB_PAT') }}"
+github_ssh_key_title: "{{ lookup('env', 'HOSTNAME') }}"
+git_user_name: Tobias Beidler-Shenk
+git_user_email: tbeidlershenk@gmail.com
+
+tailscale_authkey: "{{ lookup('env', 'TAILSCALE_AUTHKEY') }}"
+tailscale_ci_authkey: "{{ lookup('env', 'TAILSCALE_CI_AUTHKEY') }}"
+tailscale_hostname: "{{ lookup('env', 'TAILSCALE_HOSTNAME') }}"

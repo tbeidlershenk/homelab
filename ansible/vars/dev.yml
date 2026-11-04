@@ -1,0 +1,6 @@
+# Dev VM (see docs/ROADMAP.md, Phase 1b). Never touches GitHub or the public edge.
+github_setup: false
+github_ci_secrets: false
+tailscale_up: true
+cloudflared_enabled: false
+filen_enabled: false

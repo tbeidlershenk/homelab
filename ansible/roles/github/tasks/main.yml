@@ -1,0 +1,52 @@
+- name: GitHub access for this host
+  when: github_setup | bool
+  block:
+    - name: SSH key for root
+      ansible.builtin.command: ssh-keygen -t ed25519 -f /root/.ssh/id_ed25519 -N ""
+      args:
+        creates: /root/.ssh/id_ed25519
+
+    - name: Check whether gh is logged in
+      ansible.builtin.command: gh auth status
+      register: github_gh_status
+      changed_when: false
+      failed_when: false
+
+    - name: Log gh in with the PAT
+      ansible.builtin.command: gh auth login --with-token
+      args:
+        stdin: "{{ github_pat }}"
+      no_log: true
+      when: github_gh_status.rc != 0
+      changed_when: true
+
+    - name: Read this host's public key
+      ansible.builtin.slurp:
+        src: /root/.ssh/id_ed25519.pub
+      register: github_host_pubkey
+
+    - name: Keys already registered on the GitHub account
+      ansible.builtin.command: gh api user/keys --jq '.[].key'
+      register: github_account_keys
+      changed_when: false
+
+    - name: Register this host's SSH key on GitHub
+      ansible.builtin.command: gh ssh-key add /root/.ssh/id_ed25519.pub --title {{ github_ssh_key_title | quote }}
+      when: (github_host_pubkey.content | b64decode).split()[1] not in github_account_keys.stdout
+      changed_when: true
+
+    - name: Trust github.com's host key
+      ansible.builtin.known_hosts:
+        path: /root/.ssh/known_hosts
+        name: github.com
+        key: "{{ lookup('ansible.builtin.pipe', 'ssh-keyscan -t ed25519 github.com 2>/dev/null') }}"
+
+# Only what the deploy workflow actually uses. The server's SSH private key is
+# deliberately NOT uploaded (see Phase 0).
+- name: CI secrets on the repo
+  ansible.builtin.command: gh secret set TAILSCALE_CI_AUTHKEY --repo {{ github_repo | quote }}
+  args:
+    stdin: "{{ tailscale_ci_authkey }}"
+  no_log: true
+  changed_when: false
+  when: github_ci_secrets | bool

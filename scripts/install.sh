@@ -1,86 +1,30 @@
 #!/bin/bash
-# Installs dependencies to an environment (dev/stage/prod)
+# Installs the two prerequisites the Ansible playbook needs: Ansible itself and
+# the Doppler CLI (which supplies its settings). Everything else is declared in
+# ansible/ and applied by scripts/prepare.sh.
+set -euo pipefail
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "This script must be run as root (use sudo)" >&2
     exit 1
 fi
 
-log() {
-    local GREEN='\033[1;32m'
-    local RESET='\033[0m'
-    echo -e "${GREEN}$*${RESET}"
-}
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y ansible-core python3-debian curl ca-certificates git gnupg python3
 
-logerror() {
-    local RED='\033[1;31m'
-    local RESET='\033[0m'
-    echo -e "${RED}$*${RESET}" >&2
-}
-
-# Install Doppler
-curl -Ls https://cli.doppler.com/install.sh | sh
-
-# Source environment variables
-script_context=$(dirname "${BASH_SOURCE[0]}")
-source "$script_context/doppler-get.sh"
-log "Loaded Doppler environment variables." 
-
-# Update system & install packages
-apt update
-apt upgrade -y
-apt install -y curl
-apt install -y git
-apt install -y gh
-apt install -y yq
-log "Installed apt packages." 
-
-# Install Python 
-apt install python3-pip -y
-apt install python3-venv -y
-log "Installed Python & Pip."
-
-# Install Filen CLI
-curl -sL https://filen.io/cli.sh | bash
-log "Installed Filen CLI."
-
-# Install Docker
-if ! command -v docker &> /dev/null; then
-    echo "Docker not found. Installing Docker using official get-docker.sh script..."
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-    rm get-docker.sh
-    usermod -aG docker $USER
-    echo "You may need to re-login."
+# Doppler's signed apt repo (replaces piping cli.doppler.com/install.sh to sh).
+# Skipped if a doppler binary already exists, e.g. from the old installer.
+if ! command -v doppler >/dev/null; then
+    curl -fsSL --retry 3 --proto '=https' \
+        https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key \
+        | gpg --dearmor --yes -o /usr/share/keyrings/doppler-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" \
+        > /etc/apt/sources.list.d/doppler-cli.list
+    apt-get update
+    apt-get install -y doppler
 fi
-log "Docker installation complete." 
 
-# Install Tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
-log "Tailscale installation complete." 
-
-# Install Cloudflared
-if ! command -v cloudflared &> /dev/null; then
-    wget -O /tmp/cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-    dpkg -i /tmp/cloudflared.deb
-    rm /tmp/cloudflared.deb
-fi
-log "Cloudflared installed."
-
-check() {
-    if command -v "$1" &> /dev/null; then
-        log "$1 installed: $($1 --version 2>/dev/null | head -n 1)"
-    else
-        logerror "$1 NOT installed"
-    fi
-}
-
-check curl
-check git
-check gh
-check yq
-check python3
-check pip3
-check docker
-check tailscale
-check cloudflared
+ansible --version | head -1
+doppler --version
+echo "Prerequisites installed. Next: sudo ./scripts/prepare.sh"

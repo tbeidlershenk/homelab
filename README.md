@@ -17,7 +17,9 @@ Infrastructure-as-scripts for a single self-hosted server: provisioning, secrets
 api/            Flask control-plane API (systemd service, port 5001)
 config/         systemd unit files + their startup wrapper scripts
 dockhand/       compose file for the Dockhand container-management UI
-scripts/        provisioning, secrets, backup, and deploy scripts
+ansible/        host playbook, roles, and per-environment vars
+scripts/        entry points (install/prepare/deploy), secrets, backup
+docs/           ROADMAP.md (migration plan and status)
 data/           live Docker volumes for each service (gitignored)
 backup/         rsync target for backups, mirrors data/ layout (gitignored)
 logs/           script logs, e.g. backup.log (gitignored)
@@ -28,17 +30,23 @@ logs/           script logs, e.g. backup.log (gitignored)
 
 ```bash
 git clone https://github.com/tbeidlershenk/homelab.git && cd homelab
-sudo ./scripts/install.sh   # apt packages, Docker, Tailscale, Cloudflared, Filen CLI
-sudo ./scripts/prepare.sh   # directories, ACLs, systemd units, venv, bring services up
+# place the Doppler bootstrap .env (DOPPLER_PROJECT / DOPPLER_CONFIG / DOPPLER_TOKEN)
+sudo ./bootstrap.sh            # = scripts/install.sh + scripts/prepare.sh
 ```
 
-`prepare.sh` is idempotent and is also what `deploy.sh` re-runs on every deploy. It:
+- `scripts/install.sh` installs only the prerequisites: `ansible-core` and the Doppler CLI.
+- `scripts/prepare.sh` loads Doppler settings and applies the Ansible playbook in `ansible/`. It is idempotent and is what `deploy.sh` re-runs on every deploy. Use `sudo ./scripts/prepare.sh --check --diff` to see what would change without changing anything.
 
-- Creates `logs/`, `backup/`, `data/`, `/etc/homelab`.
-- Grants the non-root `HOMELAB_USER` ACL access to the repo directory.
-- Sets up GitHub SSH access and (in `prod`) pushes deploy secrets to the GitHub Actions secrets (`SSH_PRIVATE_KEY`, `SSH_HOST`, `TAILSCALE_CI_AUTHKEY`, ...) so Actions can reach the box.
-- Installs the three systemd units from `config/` and their wrapper scripts from `config/wrappers/` into `/etc/homelab/`.
-- Brings up Tailscale, the API's Python venv, and (in `prod`) Cloudflared.
+The playbook (`ansible/site.yml`) declares:
+
+- **`base`:** packages, directories, ACLs for the non-root `HOMELAB_USER`, git identity, and the Filen CLI.
+- **`docker`:** Docker from its signed apt repo, if not already installed.
+- **`github`:** in dev/prod, GitHub SSH access. In prod it also pushes `TAILSCALE_CI_AUTHKEY` to the GitHub Actions secrets.
+- **`secrets`:** writes Doppler secrets to `/etc/homelab/.env` (mode 0600).
+- **`tailscale`, `cloudflared` (prod only), `api`:** install the systemd units and wrappers from `config/`. Services restart only when something they depend on changed.
+- **`dockhand`:** brings up the Dockhand container-management UI.
+
+Per-environment toggles live in `ansible/vars/{prod,stage,dev}.yml`. The migration plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## systemd services
 
@@ -57,5 +65,6 @@ A minimal Flask app (`api/server.py`) whose only job is letting trusted callers 
 | Route                                | Description                                                                                 |
 | ------------------------------------ | ------------------------------------------------------------------------------------------- |
 | `GET /`                              | Health check — `{"status": "ok"}`                                                           |
+| `GET /otps/get`                      | Wakes the Mac OTP server (Wake-on-LAN) and returns a code from it                           |
 | `GET /tasks/run/<script>`            | Runs `scripts/<script>.sh`, streaming stdout/stderr back as Server-Sent Events              |
 | `GET /tasks/run_unattended/<script>` | Fire-and-forget: starts `scripts/<script>.sh` detached and returns immediately with its PID |

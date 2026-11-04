@@ -1,0 +1,63 @@
+# Tailscale's own install script used to set up a .list repo with this same
+# keyring; remove it so it can't conflict with the deb822 definition.
+- name: Remove legacy Tailscale repo definition
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/tailscale.list
+    state: absent
+
+- name: Tailscale apt repository
+  ansible.builtin.deb822_repository:
+    name: tailscale
+    types: deb
+    uris: https://pkgs.tailscale.com/stable/ubuntu
+    suites: "{{ ansible_facts.distribution_release }}"
+    components: main
+    signed_by: "https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_facts.distribution_release }}.noarmor.gpg"
+
+- name: Tailscale package
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+
+# Our unit replaces the packaged one so state lives in data/tailscale.
+- name: Tailscaled unit and wrapper
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: "{{ repo_root }}/config/tailscaled.service", dest: /etc/systemd/system/tailscaled.service, mode: "0644" }
+    - { src: "{{ repo_root }}/config/wrappers/tailscaled_start.sh", dest: "{{ etc_dir }}/tailscaled_start.sh", mode: "0755" }
+  notify: Restart tailscaled
+
+- name: Switch to our tailscaled unit before checking login state
+  ansible.builtin.meta: flush_handlers
+
+- name: Tailscaled running
+  ansible.builtin.systemd_service:
+    name: tailscaled
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Join the tailnet
+  when: tailscale_up | bool
+  block:
+    - name: Current Tailscale state
+      ansible.builtin.command: tailscale status
+      register: tailscale_status
+      changed_when: false
+      failed_when: false
+
+    - name: Run tailscale up
+      ansible.builtin.command: >-
+        tailscale up
+        --authkey {{ tailscale_authkey | quote }}
+        --ssh
+        --hostname {{ tailscale_hostname | quote }}
+        --accept-routes
+        --advertise-tags=tag:{{ homelab_env }}
+      no_log: true
+      when: tailscale_status.rc != 0
+      changed_when: true
