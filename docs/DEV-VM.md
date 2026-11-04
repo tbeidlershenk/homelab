@@ -14,6 +14,8 @@ This is the first real execution of the Ansible playbook from Phase 1. It has pa
 
 ## Part A — Owner setup
 
+> **Automated version:** `dev/vm-test.sh <dev-env-file> [branch]` runs the whole test unattended on a throwaway VM: launch → bootstrap → idempotent re-run → host checks → restart-on-change → `tailscale logout` + delete. It needs `multipass` on the host, plus a dev env file (the three `DOPPLER_*` lines, `DOPPLER_CONFIG=dev`) kept outside the repo. The Doppler `dev` Tailscale key must be **reusable and ephemeral**, since each run joins and leaves.
+
 ### 1. Doppler `dev` config
 Copy the `stage` config to a new `dev` config in the same project, then set or override:
 
